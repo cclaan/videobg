@@ -5,29 +5,31 @@
       color="primary"
       dark
     >
-      <div class="d-flex align-center">
-        <v-img
+      
+<!--       <div class="d-flex align-center">
+      </div>
+
+
+      <div class="align-center text-center">
+          <p>{{ message }}</p>
+      </div>
+ -->
+    <v-spacer></v-spacer>
+
+    <v-img
           alt="Vuetify Logo"
           class="shrink mr-2"
           contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
+          centered
+          src="logo.png"
           transition="scale-transition"
           width="40"
         />
+        <h3>Video Background Remover.com</h3>
 
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
+      <v-spacer></v-spacer>
 
-      <!-- <v-spacer></v-spacer> -->
-
-      <v-tabs
+<!--       <v-tabs
         centered
         class="ml-n9"
         color="grey lighten-3"
@@ -40,7 +42,7 @@
         </v-tab>
 
       </v-tabs>
-
+ -->
 
       <v-btn
         href="https://github.com/vuetifyjs/vuetify/releases/latest"
@@ -52,168 +54,50 @@
       </v-btn>
     </v-app-bar>
 
-    <v-main class="grey lighten-3">
+    <v-main class="grey lighten-4">
 
       <!-- <HelloWorld/> -->
       <v-container >
         
-        <v-row>
-          <v-col
+        <v-row >
+<!--           <v-col
             cols="12"
             sm="2"
           >
           <Sidebar/>
 
-<!--             <v-sheet
-              rounded="lg"
-              min-height="268"
-            >
-              sidebar content 
-            </v-sheet>
- -->
-          </v-col>
+          </v-col> -->
 
           <v-col
             cols="12"
-            sm="8"
+            sm="12"
           >
-            <v-sheet
+
+<!--             <v-sheet
               min-height="70vh"
               color="white"
               elevation="4"
               rounded
               >
+ -->
+              <!-- <h1> Load: {{ load_state }} </h1> -->
+
+              
 
 
-              <video
-                :src="video"
-                controls
-              />
-              <br/>
-            
-              <v-btn
-                  
-                  color="primary"
-                  @click="loadVideo"
-                >
-                  Process
-                </v-btn>
+              
+    
+              <!-- <img id="output-image" style='border: 1px solid #ffcc00;'/> -->
+              
+              <canvas width="450" style="border:1px solid; display: none;" ></canvas>
+              
 
-              <p>{{ message }}</p>
+              <!-- <input type="file" id="uploader"> -->
 
-            
-            <!-- <HelloWorld/> -->
-            <Steps ref="steps">
+              
+              
 
-                <div
-                  v-for="file in video_files"
-                  :key="file.name"
-                >
-                  {{ file.name }} size: {{ Math.round(file.size / 10000) / 100 }}  MB
-                </div>
-
-
-                <Uploader ref="uploader" v-on:changed="onFilesChanged" />
-                  
-                  <!-- v-show="video_files.length > 0"     -->
-                <v-btn
-                  
-                  :disabled="video_files.length == 0"
-                  color="primary"
-                  @click="nextStep"
-                >
-                  Next Step
-                </v-btn>
-
-
-            </Steps>
-
-            
-
-            
-            <div class="text-center">
-              <div>
-                <v-btn
-                  class="ma-2"
-                  color="primary"
-                  dark
-                  @click="overlay = !overlay"
-                >
-                  Accept
-                  <v-icon
-                    dark
-                    right
-                  >
-                    mdi-checkbox-marked-circle
-                  </v-icon>
-                </v-btn>
-
-                <v-btn
-                  class="ma-2"
-                  color="red"
-                  dark
-                >
-                  Decline
-                  <v-icon
-                    dark
-                    right
-                  >
-                    mdi-cancel
-                  </v-icon>
-                </v-btn>
-
-                <v-btn
-                  class="ma-2"
-                  dark
-                >
-                  <v-icon
-                    dark
-                    left
-                  >
-                    mdi-minus-circle
-                  </v-icon>Cancel
-                </v-btn>
-              </div>
-            </div>
-
-            Data: {{ toggle_exclusive }}
-                  <v-card
-                    flat
-                    class="py-12"
-                  >
-                    <v-card-text>
-                      <v-row
-                        align="center"
-                        justify="center"
-                      >
-                        <v-col cols="12">
-                          <p class="text-center">
-                            Mandatory
-                          </p>
-                        </v-col>
-                        <v-btn-toggle
-                          v-model="toggle_exclusive"
-                          mandatory
-                        >
-                          <v-btn>
-                            <v-icon>mdi-format-align-left</v-icon>
-                          </v-btn>
-                          <v-btn>
-                            <v-icon>mdi-format-align-center</v-icon>
-                          </v-btn>
-                          <v-btn>
-                            <v-icon>mdi-format-align-right</v-icon>
-                          </v-btn>
-                          <v-btn>
-                            <v-icon>mdi-format-align-justify</v-icon>
-                          </v-btn>
-                        </v-btn-toggle>
-                      </v-row>
-                    </v-card-text>
-                  </v-card>
-
-
-            <v-progress-circular
+               <!-- <v-progress-circular
               :rotate="90"
               :size="100"
               :width="15"
@@ -222,72 +106,199 @@
 
             >
               {{ progress_value }} %
-            </v-progress-circular>
-                    
-            <br/>
-            asdf  
-            <br/>
-            <v-divider></v-divider>
-            
+            </v-progress-circular> -->
 
+            <!-- STEPS -->
 
-                    <div class="text-center">
-                      <v-btn
-                        dark
-                        color="orange darken-2"
-                        @click="snackbar = true"
-                      >
-                        Open Snackbar
-                      </v-btn>
+            <v-stepper
+                v-model="current_step"
+                vertical
+                non-linear
+              >
 
-                      <v-snackbar
-                        v-model="snackbar"
-                        :timeout="snack_timeout"
-                      >
-                        {{ snack_text }}
+                <v-stepper-step
+                  :complete="current_step > 1"
+                  
+                  step="1"
+                >
 
-                        <template v-slot:action="{ attrs }">
-                          <v-btn
-                            color="blue"
-                            text
-                            v-bind="attrs"
-                            @click="snackbar = false"
-                          >
-                            Close
-                          </v-btn>
-                        </template>
-                      </v-snackbar>
+                <!-- =========== STEP 1 ========== -->
+
+                  Select Video
+                  
+                </v-stepper-step>
+
+                <v-stepper-content step="1">
+                  
+                    <div
+                      v-for="file in video_files"
+                      :key="file.name"
+                    >
+                      {{ file.name }} size: {{ Math.round(file.size / 10000) / 100 }}  MB
                     </div>
 
 
+                    <Uploader ref="uploader" v-on:changed="onFilesChanged" />
+                      
+                      <!-- v-show="video_files.length > 0"     -->
+                    <v-btn
+                      
+                      :disabled="video_files.length == 0"
+                      color="primary"
+                      @click="nextStep"
+                    >
+                      Next Step
+                    </v-btn>
 
-            <br/>
-            asfd
-            <br/>
-            asfd
-            <br/>
-            asfd
-            <br/>
-            asfd
-              <!--  -->
-            </v-sheet>
-          </v-col>
+                </v-stepper-content>
 
-<!--           <v-col
-            cols="12"
-            sm="2"
-          >
-            <v-sheet
-              rounded="lg"
-              min-height="268"
-            >
-              blah
-            </v-sheet>
-          </v-col>
+                <v-stepper-step
+                  :complete="current_step > 2"
+                  step="2"
+                >
+                  Choose Settings
+                  
+
+                </v-stepper-step>
+
+                <v-stepper-content step="2">
+                  
+                  <v-card
+                    color="grey lighten-4"
+                    class="mb-10 pa-4"
+                    elevation="0"
+                  >
+
+                   <h4>Select Background Color</h4>
+                   
+                   <v-color-picker
+                  class="ma-4"
+                  :swatches="swatches"
+                    show-swatches
+                    v-model="color_picker_rgba"
+                    ></v-color-picker>
+
+                    <v-divider></v-divider>
+
+                    some other thing
+
+   
+                  </v-card>
+
+                  <v-btn
+                  
+                  color="primary"
+                  @click="processVideo"
+                  :disabled="video_files.length == 0 || load_state > 1"
+                  :loading="load_state > 1"
+                >
+                  Process
+                  <v-icon
+                    dark
+                    right
+                  >
+                    mdi-checkbox-marked-circle
+                  </v-icon>
+                </v-btn>
+
+
+<!--                   <v-btn text>
+                    Cancel
+                  </v-btn>
  -->
+                </v-stepper-content>
+
+                <v-stepper-step
+                  :complete="load_state >= 5"
+                  step="3"
+                >
+                <v-text>
+                  Process Video
+                  <v-progress-circular
+                      indeterminate
+                      size="20"
+                      v-if="load_state > 1 && load_state < 5"
+                    ></v-progress-circular>
+                </v-text>
+                </v-stepper-step>
+
+                <v-stepper-content step="3">
+
+                  <v-card
+                    color="grey lighten-4"
+                    class="mb-4 pa-4"
+                    elevation="0"
+                    min-height="500"
+                  >
+
+                  <h3>{{ message }}</h3>
+
+                  <div class="pa-4">
+
+                  <v-progress-linear
+                      v-model="progress_value"
+                      height="20"
+                      rounded
+                      v-if="load_state == 3 || load_state == 4"
+                      :indeterminate="load_state == 4"
+                      
+                    >
+                      <strong>{{ progress_value }}</strong>
+                    
+                    </v-progress-linear>
+
+                    </div>
+
+                    <video id="output-video" style="display: none;" controls></video>
+                    <a href="#" style="display: none;" id="videolink" download="video.mp4">DOWNLOAD</a>
+
+                  </v-card>
+                  
+                  <v-btn
+                    color="primary"
+                    class="ma-4"
+                    @click="downloadVideo"
+                  >
+                    Download MP4
+                  </v-btn>
+
+<!--                   <v-btn
+                    color="primary"
+                    class="ma-4"
+                    @click="downloadImages"
+                  >
+                    Download Images
+                  </v-btn> -->
+
+                  <v-btn
+                    color="secondary"
+                    class="ma-4"
+                    @click="uploadAnotherVideo"
+                  >
+                    Upload Another Video
+                  </v-btn>
+
+<!--                   <v-btn text>
+                    Cancel
+                  </v-btn>
+ -->                  
+
+
+                </v-stepper-content>
+
+                
+              </v-stepper>
+              
+
+            <!-- </v-sheet> -->
+
+          </v-col>
+
         </v-row>
 
       </v-container>
+
+      <br/><br/><br/><br/>
       <Footer/>
 
 
@@ -305,18 +316,22 @@
 </template>
 
 
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.7.0/dist/tf.min.js"></script> -->
 
 <script>
 
 //import HelloWorld from './components/HelloWorld';
-import Footer from './components/footer.vue';
+import Footer from './components/footer2.vue';
 //import Toggle from './components/toggle.vue';
-import Sidebar from './components/sidebar.vue';
-import Steps from './components/steps.vue';
+//import Sidebar from './components/sidebar.vue';
+//import Steps from './components/steps.vue';
 
 import Uploader from './components/uploader.vue';
 
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+
+import * as tf from '@tensorflow/tfjs';
+//import { loadGraphModel } from '@tensorflow/tfjs-converter';
 
 
 export default {
@@ -325,13 +340,16 @@ export default {
   components: {
     //HelloWorld,
     Footer,
-    Sidebar,
-    Steps,
+    //Sidebar,
+    //Steps,
     Uploader,
     //Toggle,
   },
 
   data: () => ({
+
+    ffmpeg : null,
+    tf_model : null,
     
     links: [
         'Video BG Remover',
@@ -344,17 +362,31 @@ export default {
 
       overlay: false,
 
-      progress_value: 10,
+      progress_value: "",
 
 
       snackbar: false,
       snack_text: 'My timeout is set to 2000.',
       snack_timeout: 2000,
 
+      current_step: 1,
+      load_state : 0,
 
       video: null,
 
       message: "hello",
+
+      bg_color : [0.0, 1.0, 0.0],
+
+      color_picker_rgba: { r: 0, g: 255, b: 0, a: 1 },
+
+      swatches: [
+        ['#FF0000', '#AA0000', '#550000'],
+        ['#FFFF00', '#AAAA00', '#555500'],
+        ['#00FF00', '#00AA00', '#005500'],
+        ['#00FFFF', '#00AAAA', '#005555'],
+        ['#0000FF', '#0000AA', '#000055'],
+      ],
 
   }),
 
@@ -368,32 +400,250 @@ export default {
       },
     },
 
+    created: function() {
+        console.log("creted?");
+    },
+
+    mounted: function() {
+        console.log("Moutnd? ");
+        this.setup();
+    },
+
   methods : {
 
-    async loadVideo() {
+    async setup() {
 
-      console.log("Loading...");
+        // Load FFMPEG and TF.js 
 
-      const ffmpeg = createFFmpeg({ log: true });
-      await ffmpeg.load();
+        this.message = "Loading FFMPEG...";
+        this.ffmpeg = createFFmpeg({ log: true });
+        await this.ffmpeg.load();
 
-      console.log("done...");
-      this.message = "loading..";
 
-      const { name } = this.video_files[0];
-      //message.innerHTML = 'Loading ffmpeg-core.js';
-      //await ffmpeg.load();
+        this.message = "Loading TF model...";
+        this.tf_model = await tf.loadGraphModel('./model/model.json');
+        
+        this.message = "Ready!";
+
+        this.load_state = 1;
+
+    },
+
+    downloadVideo() {
+
+        const video_download = document.getElementById('videolink');
+        video_download.click();
+
+    },
+
+    downloadImages() {
+
+    },
+
+    uploadAnotherVideo() {
+        this.current_step = 1;
+        this.load_state = 1;
+        this.video_files = [];
+        this.$refs.uploader.files = [];
+        this.$refs.uploader.dropped = 0;
+        this.$refs.uploader.Imgs = [];
+
+        const video = document.getElementById('output-video');
+        video.style.display = "none";
+    },
+
+
+    async processVideo() {
+
+        this.load_state = 2;
+
+        // setTimeout( function() { 
+        //     this.blah();
+        // }, 600 );
+
+        //setTimeout(() => { this.current_step = 3; }, 800 );
+
+
+        this.current_step = 3;
+
+        this.bg_color = [ this.color_picker_rgba['r'] / 255.0,  this.color_picker_rgba['g'] / 255.0, this.color_picker_rgba['b'] / 255.0 ];
+
+        
+
+        console.log("Loading...");
+
+        const ffmpeg = this.ffmpeg;
+        const model = this.tf_model;
+
+        const files = this.video_files;
+
+        var video_name = files[0].name;
+
+        console.log(" Processing video: " + video_name );
+
+        // Set initial recurrent state
+        let [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+
+        // Set downsample ratio
+        const downsample_ratio = tf.tensor(0.5);
+
+        const canvas = document.querySelector('canvas');
+
+    
+        this.message = 'Reading video';
+
+        ffmpeg.FS('writeFile', video_name, await fetchFile(files[0]));
+
+        //await ffmpeg.run('-i', video_name, '-ss', '0', '-to', '1', 'output.mp4');
+        //ffmpeg -i "%1" frames/out-%03d.jpg
+
+        await ffmpeg.FS('mkdir', 'frames')
+
+        let fmt = ".png";
+
+        await ffmpeg.run('-i', video_name, 'frames/out-%03d' + fmt);
+
+        this.message = 'Processing frames...';
+
+        // const data = ffmpeg.FS('readFile', 'frames/out-001.jpg');
+        // const image = document.getElementById('output-image');
+        // image.src = URL.createObjectURL(new Blob([data.buffer], { type: 'image/jpeg' }));
+
+        var images = ffmpeg.FS("readdir", "frames");
+        images = images.filter(img_path => img_path.endsWith(fmt));
+
+        console.log("Got images" + images.length );
+
+        //var idx = 0;
+
+        //this.load_state = 3;
+
+        for ( const idx in images ) {
+
+            var img_path = images[idx];
+
+            var progress = (idx / (images.length-1) ) * 100.0;
+
+            var progress_str = "";
+
+            for ( var i = 0; i < progress; i ++ ) {
+                progress_str = progress_str + "|";
+            }
+
+            //progress_elem.innerHTML = progress.toFixed(0) + "% Complete";;
+            //this.progress_value = Math.round(progress).toString() +;
+            this.progress_value = progress.toFixed(0) + "%";
+
+            //message.innerHTML = progress_str
+
+            if ( img_path.endsWith(fmt) ) {
+
+                img_path = "frames/" + img_path;
+
+                //console.log(img_path);
+
+                await tf.nextFrame();
+
+
+                const data = ffmpeg.FS('readFile', img_path);
+                //const image = document.getElementById('output-image');
+                //image.src = URL.createObjectURL(new Blob([data.buffer], { type: 'image/jpeg' }));
+
+                const frame_img = new Image();
+                //frame_img.src = URL.createObjectURL(new Blob([data.buffer], { type: 'image/jpeg' }));
+                frame_img.src = URL.createObjectURL(new Blob([data.buffer], { type: 'image/png' }));
+                await frame_img.decode();
+
+                // (async () => {
+                //   const img = new Image();
+                //   img.src = "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png";
+                //   await img.decode();
+                //   // img is ready to use
+                //   console.log( `width: ${ img.width }, height: ${ img.height }` );
+                // })();
+
+                //const imageBuffer = fs.readFileSync(path);
+                //const tfimage = tfnode.node.decodeImage(imageBuffer);
+                //const img = tfnode.node.decodeImage( await fetchFile(img_path) );
+                //const imageData = new ImageData(await fetchFile(img_path) , );
+                const img = tf.browser.fromPixels( frame_img );
+
+                //const img = await webcam.capture();
+                const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
+
+                const [fgr, pha, r1o, r2o, r3o, r4o] = await model.executeAsync(
+                    {src, r1i, r2i, r3i, r4i, downsample_ratio}, // provide inputs
+                    ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']   // select outputs
+                );
+
+                // r1i = r1o;
+                // r2i = r2o;
+                // r3i = r3o;
+                // r4i = r4o; // not sure, @cc added this , the recurrent values should update right? 
+
+                //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg);
+                this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg, this.bg_color);
+                //this.drawMatte(null, pha.clone(), canvas, img_path, ffmpeg);
+                canvas.style.background = 'rgb(0, 0, 0)';
+
+                //canvas.style.background = 'rgb(0, 255, 0)'; 
+                //canvas.style.background = 'rgb(120, 255, 155)'; 
+
+                // Dispose old tensors.
+                tf.dispose([img, src, fgr, pha, r1i, r2i, r3i, r4i]);
+
+                // Update recurrent states.
+                [r1i, r2i, r3i, r4i] = [r1o, r2o, r3o, r4o];
+
+                // set to 'processing' state after first frame, since that takes a while
+                if ( idx == 0 ) {
+                    this.load_state = 3;
+                }
+
+
+          }
+
+        }
+
+        this.progress_value = "Creating Video...";
+        this.message = 'Creating video...';
+        this.load_state = 4; 
+
+        await ffmpeg.run('-framerate', '30', '-pattern_type', 'glob', '-i', 'frames/*.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'out.mp4');
+        const data = ffmpeg.FS('readFile', 'out.mp4');
+
+        const video = document.getElementById('output-video');
+        video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+        video.style.display = "block";
+
+        const video_download = document.getElementById('videolink');
+        video_download.href = video.src;
+        video_download.download = "video.mp4";
+
+        this.message = '';
+
+        this.load_state = 5; // Done
+
       
-      //message.innerHTML = 'Reading video';
+        
 
-      ffmpeg.FS('writeFile', name, await fetchFile(this.video_files[0]));
 
-      console.log("done2...");
 
-      //await ffmpeg.run('-i', name, '-ss', '0', '-to', '1', 'output.mp4');
-      //ffmpeg -i "%1" frames/out-%03d.jpg
 
-      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       // async function transcode() {
 
       //   //this.message.value = 'Loading ffmeg-core.js';
@@ -426,15 +676,116 @@ export default {
     },
 
 
+    dataURItoBlob(dataURI) {
+      // convert base64 to raw binary data held in a string
+      // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+      var byteString = atob(dataURI.split(',')[1]);
+
+      // separate out the mime component
+      //var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+      // write the bytes of the string to an ArrayBuffer
+      var ab = new ArrayBuffer(byteString.length);
+
+      // create a view into the buffer
+      var ia = new Uint8Array(ab);
+
+      // set the bytes of the buffer to the correct values
+      for (var i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+      }
+
+      return ia;
+
+      // write the ArrayBuffer to a blob, and you're done
+      //var blob = new Blob([ab], {type: mimeString});
+      //return blob;
+
+    },
+
+
+    async drawMatte(fgr, alpha_matte, canvas, img_path_out, ffmpeg, bg_color) {
+
+        // const rgba = tf.tidy(() => {
+          
+        //   const rgb = (fgr !== null) ?
+        //       fgr.squeeze(0).mul(255).cast('int32') :
+        //       tf.fill([alpha_matte.shape[1], alpha_matte.shape[2], 3], 255, 'int32');
+          
+        //   const a = (alpha_matte !== null) ?
+        //       alpha_matte.squeeze(0).mul(255).cast('int32') :
+        //       tf.fill([fgr.shape[1], fgr.shape[2], 1], 255, 'int32');
+
+        //   return tf.concat([rgb, a], -1);
+
+        // });
+
+        const rgba = tf.tidy(() => {
+            
+            const matte = alpha_matte.squeeze(0);
+            
+            var bg = tf.fill([fgr.shape[1], fgr.shape[2], 3], 255, 'float32');
+            
+            bg = bg.mul([bg_color[0], bg_color[1], bg_color[2]]);
+
+            bg = bg.mul( matte.mul(-1.0).add(1.0) );
+
+            var rgb = fgr.squeeze(0).mul(255).mul(matte);
+            rgb = rgb.add( bg );
+
+            rgb = rgb.cast('int32');
+
+            const a = tf.fill([fgr.shape[1], fgr.shape[2], 1], 255, 'int32');
+
+            return tf.concat([rgb, a], -1);
+
+        });
+
+        fgr && fgr.dispose();
+        alpha_matte && alpha_matte.dispose();
+
+        const [height, width] = rgba.shape.slice(0, 2);
+        const pixelData = new Uint8ClampedArray(await rgba.data());
+        const imageData = new ImageData(pixelData, width, height);
+
+        canvas.width = width;
+        canvas.height = height;
+
+        canvas.getContext('2d').putImageData(imageData, 0, 0);
+
+        //var img_png = new png.PNG({width: width, height: height});
+        //img_png.data = Buffer.from(pixelData);
+        //img_png.pack().pipe(fs.createWriteStream('tick.png'))
+        // This does not work -- encodes the base64 string as a file and not a real PNG
+        //await ffmpeg.FS('writeFile', img_path_out, img_png.pack());
+
+        const imgAsDataURL = canvas.toDataURL("image/png", 1);
+
+        //console.log(" ---> Got png buffer: " + imgAsDataURL.length );
+
+        const img_blog = this.dataURItoBlob(imgAsDataURL);
+        await ffmpeg.FS('writeFile', img_path_out, img_blog);
+
+        //console.log("Wrote file: " + img_path_out );
+
+        rgba.dispose();
+
+    },  
+
 
     nextStep() {
       console.log("next step!!");
-      this.$refs.steps.current_step = 2
+      //this.$refs.steps.current_step = 2
+      this.current_step = 2
     },
 
     onFilesChanged(files) {
       this.video_files = files
     },
+
+    onColorChanged(c) {
+        console.log("Color:" + c);
+    }
 
 
   }

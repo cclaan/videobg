@@ -20,13 +20,15 @@ export default {
     dragOver() {
       this.dropped = 2;
     },
-    dragLeave() {},
+    dragLeave() {
+      this.dropped = 0;
+    },
     drop(e) {
       let status = true;
       let files = Array.from(e.dataTransfer.files)
       if (e && files) {
         files.forEach((file) => {
-          if (file.type.startsWith("image") === false) status = false;
+          if (file.type.startsWith("video") === false) status = false;
         });
         if (status == true) {
           if (
@@ -120,7 +122,7 @@ export default {
       <input
         type="file"
         style="z-index: 1"
-        accept="image/*"
+        accept="video/*"
         ref="uploadInput"
         @change="previewImgs"
         multiple
@@ -139,7 +141,7 @@ export default {
                   r="5"
                   style="
                     fill: none;
-                    stroke: #303c42;
+                    stroke: #bbb;
                     stroke-linecap: round;
                     stroke-linejoin: round;
                   "
@@ -151,7 +153,7 @@ export default {
                 points="16.5 15.5 18.5 13.5 20.5 15.5"
                 style="
                   fill: none;
-                  stroke: #303c42;
+                  stroke: #bbb;
                   stroke-linecap: round;
                   stroke-linejoin: round;
                 "
@@ -165,7 +167,7 @@ export default {
                 y2="19.5"
                 style="
                   fill: none;
-                  stroke: #303c42;
+                  stroke: #bbb;
                   stroke-linecap: round;
                   stroke-linejoin: round;
                 "
@@ -178,7 +180,7 @@ export default {
                 points="0.6 15.42 6 10.02 8.98 13"
                 style="
                   fill: none;
-                  stroke: #303c42;
+                  stroke: #bbb;
                   stroke-linecap: round;
                   stroke-linejoin: round;
                 "
@@ -189,7 +191,7 @@ export default {
                 points="17.16 11.68 12.5 7.02 7.77 11.79"
                 style="
                   fill: none;
-                  stroke: #303c42;
+                  stroke: #bbb;
                   stroke-linecap: round;
                   stroke-linejoin: round;
                 "
@@ -202,7 +204,7 @@ export default {
                 r="1.5"
                 style="
                   fill: none;
-                  stroke: #303c42;
+                  stroke: #bbb;
                   stroke-linecap: round;
                   stroke-linejoin: round;
                 "
@@ -213,7 +215,7 @@ export default {
                 d="M19.5,11.6V4A1.5,1.5,0,0,0,18,2.5H2A1.5,1.5,0,0,0,.5,4V15A1.5,1.5,0,0,0,2,16.5H13.5"
                 style="
                   fill: none;
-                  stroke: #303c42;
+                  stroke: #bbb;
                   stroke-linecap: round;
                   stroke-linejoin: round;
                 "
@@ -224,8 +226,15 @@ export default {
       </svg>
 
       <p class="mainMessage">
-        {{ uploadMsg ? uploadMsg : "Click to upload or drop your images here" }}
+        {{ uploadMsg ? uploadMsg : "Click to select or drop your video here" }}
       </p>
+
+          <v-btn
+              color="primary"
+            >
+              Select Video
+            </v-btn>
+
     </div>
     <div class="imgsPreview" v-show="Imgs.length > 0">
       <button type="button" class="clearButton" @click="reset">

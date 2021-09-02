@@ -15,9 +15,7 @@
 
     <v-stepper-content step="1">
       
-      
-      <slot></slot>
-
+      <slot name="step1"></slot>
 
     </v-stepper-content>
 
@@ -88,6 +86,7 @@
 
     
   </v-stepper>
+  
 </template>
 
 <script>
