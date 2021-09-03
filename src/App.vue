@@ -4,6 +4,8 @@
       app
       color="primary"
       dark
+      
+
     >
       
 <!--       <div class="d-flex align-center">
@@ -25,7 +27,7 @@
           transition="scale-transition"
           width="40"
         />
-        <h3>Video Background Remover.com</h3>
+        <h3>Video Background Remover</h3>
 
       <v-spacer></v-spacer>
 
@@ -44,7 +46,7 @@
       </v-tabs>
  -->
 
-      <v-btn
+<!--       <v-btn
         href="https://github.com/vuetifyjs/vuetify/releases/latest"
         target="_blank"
         text
@@ -52,6 +54,7 @@
         <span class="mr-2">Learn More</span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
+ -->      
     </v-app-bar>
 
     <v-main class="grey lighten-4">
@@ -59,7 +62,7 @@
       <!-- <HelloWorld/> -->
       <v-container >
         
-        <v-row >
+        <v-row class="mt-2">
 <!--           <v-col
             cols="12"
             sm="2"
@@ -68,6 +71,15 @@
 
           </v-col> -->
 
+<!-- 
+          <v-col
+            cols="12"
+            sm="3"
+          >
+          
+
+          </v-col>
+ -->
           <v-col
             cols="12"
             sm="12"
@@ -95,6 +107,8 @@
               <!-- <input type="file" id="uploader"> -->
 
               
+
+
               
 
                <!-- <v-progress-circular
@@ -130,13 +144,13 @@
 
                 <v-stepper-content step="1">
                   
-                    <div
+<!--                     <div
                       v-for="file in video_files"
                       :key="file.name"
                     >
                       {{ file.name }} size: {{ Math.round(file.size / 10000) / 100 }}  MB
                     </div>
-
+ -->
 
                     <Uploader ref="uploader" v-on:changed="onFilesChanged" />
                       
@@ -145,6 +159,7 @@
                       
                       :disabled="video_files.length == 0"
                       color="primary"
+                      class="mb-6"
                       @click="nextStep"
                     >
                       Next Step
@@ -165,29 +180,30 @@
                   
                   <v-card
                     color="grey lighten-4"
-                    class="mb-10 pa-4"
+                    class="mb-6 pa-4"
                     elevation="0"
                   >
 
                    <h4>Select Background Color</h4>
                    
                    <v-color-picker
-                  class="ma-4"
+                  class="ma-5 mb-8"
+                  elevation="4"
                   :swatches="swatches"
                     show-swatches
                     v-model="color_picker_rgba"
                     ></v-color-picker>
 
-                    <v-divider></v-divider>
-
+                    <!-- <v-divider></v-divider>
                     some other thing
-
+ -->
    
                   </v-card>
 
                   <v-btn
                   
                   color="primary"
+                  class="mb-4"
                   @click="processVideo"
                   :disabled="video_files.length == 0 || load_state > 1"
                   :loading="load_state > 1"
@@ -231,15 +247,34 @@
                     min-height="500"
                   >
 
-                  <h3>{{ message }}</h3>
+                  <v-overlay :value="processing_overlay" absolute opacity="0.2">
+                    <v-progress-circular
+                      indeterminate
+                      size="64"
+                    ></v-progress-circular>
+                  </v-overlay>
 
-                  <div class="pa-4">
+<!--                   <v-progress-circular
+                      indeterminate
+                      size="30"
+                      v-if="load_state > 1 && load_state < 5"
+                    ></v-progress-circular>
+ -->
+                
+                <div class="text-center">
+                  <!-- <h3>{{ message }}</h3> -->
+                  <h2 class="text-h6 primary--text">
+                    {{ message }}
+                    </h2>
+                </div>
+
+                  <div class="pa-4 mx-auto">
 
                   <v-progress-linear
                       v-model="progress_value"
                       height="20"
                       rounded
-                      v-if="load_state == 3 || load_state == 4"
+                      v-if="load_state > 2 && load_state < 5"
                       :indeterminate="load_state == 4"
                       
                     >
@@ -249,7 +284,7 @@
 
                     </div>
 
-                    <video id="output-video" style="display: none;" controls></video>
+                    <video id="output-video" style="display: none; max-width: 70%;" class="ma-4" controls></video>
                     <a href="#" style="display: none;" id="videolink" download="video.mp4">DOWNLOAD</a>
 
                   </v-card>
@@ -257,6 +292,7 @@
                   <v-btn
                     color="primary"
                     class="ma-4"
+                    :disabled="load_state < 5"
                     @click="downloadVideo"
                   >
                     Download MP4
@@ -274,6 +310,7 @@
                     color="secondary"
                     class="ma-4"
                     @click="uploadAnotherVideo"
+                    :disabled="load_state < 5"
                   >
                     Upload Another Video
                   </v-btn>
@@ -291,6 +328,41 @@
               
 
             <!-- </v-sheet> -->
+
+
+                  <v-card
+                    
+                    class="mt-12"
+                    rounded
+                    
+                  >
+
+
+
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title><h4>Notes</h4></v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+
+                    <v-list-item two-line>
+                      <v-list-item-content>
+                        <v-list-item-title>Experimental</v-list-item-title>
+                        <v-list-item-subtitle>Currently slow and RAM hungry</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+
+                    <v-list-item two-line>
+                      <v-list-item-content>
+                        <v-list-item-title>Max File Size</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Limit videos to 5 - 10 mb
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-card>
+
+
 
           </v-col>
 
@@ -361,6 +433,8 @@ export default {
       toggle_exclusive: undefined,
 
       overlay: false,
+
+      processing_overlay: false,
 
       progress_value: "",
 
@@ -441,15 +515,18 @@ export default {
     },
 
     uploadAnotherVideo() {
-        this.current_step = 1;
-        this.load_state = 1;
-        this.video_files = [];
-        this.$refs.uploader.files = [];
-        this.$refs.uploader.dropped = 0;
-        this.$refs.uploader.Imgs = [];
 
-        const video = document.getElementById('output-video');
-        video.style.display = "none";
+        location.reload();
+
+        // this.current_step = 1;
+        // this.load_state = 1;
+        // this.video_files = [];
+        // this.$refs.uploader.files = [];
+        // this.$refs.uploader.dropped = 0;
+        // this.$refs.uploader.Imgs = [];
+
+        // const video = document.getElementById('output-video');
+        // video.style.display = "none";
     },
 
 
@@ -465,6 +542,8 @@ export default {
 
 
         this.current_step = 3;
+
+        this.processing_overlay = true;
 
         this.bg_color = [ this.color_picker_rgba['r'] / 255.0,  this.color_picker_rgba['g'] / 255.0, this.color_picker_rgba['b'] / 255.0 ];
 
@@ -503,7 +582,7 @@ export default {
 
         await ffmpeg.run('-i', video_name, 'frames/out-%03d' + fmt);
 
-        this.message = 'Processing frames...';
+        this.message = 'Initializing...';
 
         // const data = ffmpeg.FS('readFile', 'frames/out-001.jpg');
         // const image = document.getElementById('output-image');
@@ -597,7 +676,9 @@ export default {
 
                 // set to 'processing' state after first frame, since that takes a while
                 if ( idx == 0 ) {
+                    this.message = 'Processing frames...';
                     this.load_state = 3;
+                    this.processing_overlay = false;
                 }
 
 

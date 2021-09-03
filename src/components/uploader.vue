@@ -237,11 +237,16 @@ export default {
 
     </div>
     <div class="imgsPreview" v-show="Imgs.length > 0">
-      <button type="button" class="clearButton" @click="reset">
+      
+<!--       <button type="button" class="clearButton" @click="reset">
         {{ clearAll ? clearAll : "Clear All" }}
       </button>
+ -->
       <div class="imageHolder" v-for="(img, i) in Imgs" :key="i">
-        <img :src="img" />
+        <!-- <img :src="img" /> -->
+        <img src="video-thumb.png" />
+        
+        <span class="videoname">{{ files[i].name }}</span>
         <span class="delete" style="color: white" @click="deleteImg(--i)">
           <svg
             class="icon"
@@ -258,7 +263,7 @@ export default {
             />
           </svg>
         </span>
-        <div class="plus" @click="append" v-if="++i == Imgs.length">+</div>
+        <!-- <div class="plus" @click="append" v-if="++i == Imgs.length">+</div> -->
       </div>
     </div>
   </div>
@@ -316,6 +321,7 @@ export default {
   background: #fff;
   position: relative;
   border-radius: 10px;
+  border: 1px solid #ddd;
   margin: 5px 5px;
   display: inline-block;
 }
@@ -323,6 +329,21 @@ export default {
   object-fit: cover;
   width: 100%;
   height: 100%;
+}
+.videoname {
+  background: #eee;
+  opacity: 0.95;
+  position: absolute;
+  width: 150px;
+  height: 20px;
+  font-size: 12px;
+  color: #888;
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 2px;
+  text-align: center;
+  right: 0px;
+  bottom: 0px;
 }
 .imgsPreview .imageHolder .delete {
   position: absolute;
@@ -345,11 +366,11 @@ export default {
 }
 .imgsPreview .imageHolder .plus {
   color: #2d3748;
-  background: #f7fafc;
+  background: #07fafc;
   border-radius: 50%;
   font-size: 21pt;
-  height: 30px;
-  width: 30px;
+  height: 36px;
+  width: 36px;
   text-align: center;
   border: 1px dashed;
   line-height: 23px;
@@ -357,6 +378,7 @@ export default {
   right: -42px;
   bottom: 43%;
 }
+
 .plus:hover {
   cursor: pointer;
 }
