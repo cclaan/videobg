@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar
       app
-      color="primary"
+      color="purple lighten-1"
       dark
       
 
@@ -23,18 +23,22 @@
       v-if="load_state == 0"
     ></v-progress-circular>
 
+    <div class="text-center ml-4">
+          <strong>{{ loading_message }}</strong>
+    </div>        
+
     <v-spacer></v-spacer>
 
     <v-img
-          alt="Vuetify Logo"
+          alt="Free Background Eraser.com logo"
           class="shrink mr-2"
           contain
           centered
-          src="logo.png"
+          src="android-chrome-192x192.png"
           transition="scale-transition"
-          width="40"
+          width="35"
         />
-        <h3>Video Background Remover</h3>
+        <h2>Free Background Eraser</h2>.com
 
       <v-spacer></v-spacer>
 
@@ -414,8 +418,9 @@ import * as tf from '@tensorflow/tfjs';
 
 
 export default {
-  name: 'App',
+  name: 'Free Video Eraser',
 
+  
   components: {
     //HelloWorld,
     Footer,
@@ -456,6 +461,7 @@ export default {
       video: null,
 
       message: "hello",
+      loading_message: "Loading...",
 
       bg_color : [0.0, 1.0, 0.0],
 
@@ -497,17 +503,20 @@ export default {
         // Load FFMPEG and TF.js 
 
         this.message = "Loading FFMPEG...";
+        this.loading_message = "Loading FFMPEG...";
         this.ffmpeg = createFFmpeg({ log: true });
         await this.ffmpeg.load();
 
         console.log("ffmpeg loaded ------------- ");
 
         this.message = "Loading TF model...";
+        this.loading_message = "Loading TF Model...";
         this.tf_model = await tf.loadGraphModel('./model/model.json');
         
         console.log("tf model loaded ------------- ");
 
         this.message = "Ready!";
+        this.loading_message = "Ready";
 
         this.load_state = 1;
 
