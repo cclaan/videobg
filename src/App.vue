@@ -16,6 +16,13 @@
           <p>{{ message }}</p>
       </div>
  -->
+
+ <v-progress-circular
+      indeterminate
+      size="20"
+      v-if="load_state == 0"
+    ></v-progress-circular>
+
     <v-spacer></v-spacer>
 
     <v-img
@@ -205,8 +212,8 @@
                   color="primary"
                   class="mb-4"
                   @click="processVideo"
-                  :disabled="video_files.length == 0 || load_state > 1"
-                  :loading="load_state > 1"
+                  :disabled="video_files.length == 0 || load_state >= 2 || load_state == 0"
+                  :loading="load_state >= 2 || load_state == 0"
                 >
                   Process
                   <v-icon
@@ -493,13 +500,18 @@ export default {
         this.ffmpeg = createFFmpeg({ log: true });
         await this.ffmpeg.load();
 
+        console.log("ffmpeg loaded ------------- ");
 
         this.message = "Loading TF model...";
         this.tf_model = await tf.loadGraphModel('./model/model.json');
         
+        console.log("tf model loaded ------------- ");
+
         this.message = "Ready!";
 
         this.load_state = 1;
+
+
 
     },
 
