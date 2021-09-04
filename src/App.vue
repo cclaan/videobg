@@ -1,21 +1,76 @@
 <template>
   <v-app>
+
+    <!-- <v-toolbar dense dark color="teal" class="pa-0"> -->
+        <v-toolbar class="pa-0 lighten-1" color="white" flat>
+
+            
+
+      <!-- <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+
+      </v-btn>
+
+            <v-toolbar-title>
+                
+            Free Background Eraser.com</v-toolbar-title>
+
+            <v-spacer></v-spacer> -->
+
+      <v-row>
+        
+        <v-col cols="2" class="my-auto">
+          <v-progress-circular
+          indeterminate
+          size="20"
+          class="mr-4"
+          v-if="load_state == 0"
+            ></v-progress-circular>
+
+        <strong class="ml-1" style="color: gray;">{{ loading_message }}</strong>
+        
+
+        </v-col>
+
+        <v-col class="d-flex justify-space-around">
+          
+          <!-- <v-toolbar-title class="white--text"></v-toolbar-title> -->
+
+          <div style="position:relative;" class="text-center">
+
+<!--        <v-img
+              alt="Free Background Eraser.com logo"
+              style="display: inline-block;"
+              class="my-auto mt-6"
+              src="android-chrome-192x192.png"
+              width="35"
+            />
+-->
+            
+            <img src="android-chrome-192x192.png" width="32px;" style="position: absolute; left: -48px; top:0px;" />
+            <h2 style='display: inline-block; color: gray;'>Free Background Eraser</h2>
+            <span style="color: gray;">.com</span>
+            
+
+
+          </div>
+
+
+        </v-col>
+        
+        <v-col cols="2" class="d-flex justify-end my-auto">
+        
+        </v-col>
+
+    </v-row>
+    </v-toolbar>
+
+<!-- 
     <v-app-bar
       app
       color="purple lighten-1"
       dark
-      
-
     >
-      
-<!--       <div class="d-flex align-center">
-      </div>
-
-
-      <div class="align-center text-center">
-          <p>{{ message }}</p>
-      </div>
- -->
 
  <v-progress-circular
       indeterminate
@@ -24,7 +79,7 @@
     ></v-progress-circular>
 
     <div class="text-center ml-4">
-          <strong>{{ loading_message }}</strong>
+        <strong>{{ loading_message }}</strong>
     </div>        
 
     <v-spacer></v-spacer>
@@ -42,31 +97,11 @@
 
       <v-spacer></v-spacer>
 
-<!--       <v-tabs
-        centered
-        class="ml-n9"
-        color="grey lighten-3"
-      >
-        <v-tab
-          v-for="link in links"
-          :key="link"
-        >
-          {{ link }}
-        </v-tab>
 
-      </v-tabs>
- -->
 
-<!--       <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
-        <span class="mr-2">Learn More</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
- -->      
-    </v-app-bar>
+
+    </v-app-bar>  -->
+
 
     <v-main class="grey lighten-4">
 
@@ -118,7 +153,9 @@
               <!-- <input type="file" id="uploader"> -->
 
               
-              <h3> {{ process_mode }} </h3>
+              <!-- <h3> {{ process_mode }} </h3> -->
+
+
 
               <v-alert
               
@@ -153,6 +190,56 @@
                 non-linear
               >
 
+<!-- 
+            <div class="text-center pa-6 secondary--text">
+                <h3 class="mb-4">Free background removal for images and videos</h3>
+              <img src="demo.jpg" height="150" class="rounded" />
+            </div> -->
+
+
+            <v-row>
+                
+                <v-col cols="4" class="">
+                    <img src="demo.jpg" height="140" class="rounded ma-4"/>
+                </v-col>
+
+                <v-col cols="4" class="my-auto text-center">
+                    <span style="font-size: 170%; font-weight: bold; color: #886677;"><u>Free</u> Background Removal</span>
+                    <p class="" style="font-size: 150%;  color: #886677;">for images and videos</p>
+                </v-col>
+
+                <!-- <v-col cols="3" class="my-auto text-center">
+                    <strong class="ml-1"> Free background removal <br/> for images and videos</strong>
+                </v-col> -->
+
+                <v-col cols="4" class="my-auto">
+                    
+                    <p class="ml-6"> 
+                        <v-icon color="green" class="pr-2">
+                            mdi-checkbox-marked-circle
+                        </v-icon>
+                    Completely in browser</p>
+
+                    <p class="ml-6">
+                        <v-icon color="green" class="pr-2">
+                            mdi-checkbox-marked-circle
+                        </v-icon>
+                    No data leaves your computer!
+                    </p>
+                    
+
+                </v-col>
+
+                <!-- <v-spacer/> -->
+
+                
+
+
+                
+            </v-row>
+
+
+              <v-divider></v-divider>
                 <v-stepper-step
                   :complete="current_step > 1"
                   
@@ -254,7 +341,7 @@
                   step="3"
                 >
                 <div>
-                  Process Video
+                  Process {{ process_mode == null ? "Video or Images" : process_mode }}
                   <v-progress-circular
                       indeterminate
                       size="20"
@@ -472,6 +559,8 @@ export default {
       processing_overlay: false,
 
       progress_value: "",
+
+      num_warmup: 5,
 
 
       snackbar: false,
@@ -706,7 +795,7 @@ export default {
 
         var image_files = this.video_files;
 
-        const num_warmup = 4;
+        const num_warmup = this.num_warmup;
         for ( var w = 0; w < num_warmup; w++) {
             image_files.splice(0, 0, image_files[0]);
         }
@@ -1195,12 +1284,12 @@ export default {
     },
 
     onFilesChanged(files) {
-        console.log("files changed! " + files );
+        //console.log("files changed! " + files );
         this.video_files = files;
         
     },
-    onFilesInfoChanged(files_info) {
-        console.log('info changed');
+    onFilesInfoChanged() {
+        //console.log('info changed');
         this.checkFilesMode();
     },
  

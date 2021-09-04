@@ -281,8 +281,9 @@ export default {
       </svg>
 
       <p class="mainMessage">
-        {{ uploadMsg ? uploadMsg : "Drop your video or images here" }}
+        Drop a single video or multiple images here
       </p>
+      <p class="subMessage">Images should be of the same dimensions</p>
 
           <v-btn
               color="primary"
@@ -330,7 +331,7 @@ export default {
 .container {
   width: 100%;
   height: 100%;
-  background: #f7fafc;
+  background: #f2f7fa;
   
   border-radius: 10px;
   padding: 30px;
@@ -434,6 +435,15 @@ export default {
   position: absolute;
   right: -42px;
   bottom: 43%;
+}
+.mainMessage {
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+.subMessage {
+  /*font-style: italic;*/
+  color: #888;
 }
 
 .plus:hover {
