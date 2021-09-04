@@ -7,6 +7,7 @@ export default {
       files: [],
       dropped: 0,
       Imgs: [],
+      files_info: [],
     };
   },
   props: {
@@ -28,7 +29,7 @@ export default {
       let files = Array.from(e.dataTransfer.files)
       if (e && files) {
         files.forEach((file) => {
-          if (file.type.startsWith("video") === false) status = false;
+          if (file.type.startsWith("video") === false && file.type.startsWith("image") === false) status = false;
         });
         if (status == true) {
           if (
@@ -68,9 +69,12 @@ export default {
     deleteImg(index) {
       this.Imgs.splice(index, 1);
       this.files.splice(index, 1);
+      this.files_info.splice(index, 1);
       this.$emit("changed", this.files);
+      this.$emit("info_changed", this.files_info);
       this.$refs.uploadInput.value = null;
     },
+
     previewImgs(event) {
       if (
         this.$props.max &&
@@ -82,23 +86,74 @@ export default {
           : `Maximum files is` + this.$props.max;
         return;
       }
+      
       if (this.dropped == 0) this.files.push(...event.currentTarget.files);
+      
       this.error = "";
       this.$emit("changed", this.files);
+      this.$emit("info_changed", this.files_info);
+      
       let readers = [];
       if (!this.files.length) return;
+
       for (let i = 0; i < this.files.length; i++) {
         readers.push(this.readAsDataURL(this.files[i]));
       }
-      Promise.all(readers).then((values) => {
+      
+      Promise.all(readers).then( (values) => {
+
         this.Imgs = values;
+
+        for ( const idx in values ) {
+            
+            const file = this.files[idx];
+
+            var file_info = {"type" : file.type, "name" : file.name , "complete" : false };
+
+            if ( file.type.startsWith("image") ) {
+
+                const dataURL = values[idx];
+                const img = new Image();
+                img.src = dataURL;
+                img.decode() // TODO: shouldnt this be await or .then() ?
+                  .then(() => {
+                    
+                    //file_info["width"] = img.width;
+                    //file_info["height"] = img.height;
+                    //file_info["complete"] = true;
+                    this.files_info[idx]['width'] = img.width;
+                    this.files_info[idx]['height'] = img.height;
+                    this.files_info[idx]['complete'] = true;
+                    console.log( " image: " + img.width + " h: " + img.height );
+                    //this.files_info.push(file_info);
+                    this.$emit("info_changed", this.files_info);
+                });
+                
+                
+            } else {
+
+                file_info["complete"] = true;
+
+            }
+
+            this.files_info.push(file_info);
+
+        }
+
+        this.$emit("info_changed", this.files_info);
+
+        //this.$emit("changed", this.files);
+
+
       });
     },
     reset() {
       this.$refs.uploadInput.value = null;
       this.Imgs = [];
       this.files = [];
+      this.files_info = [];
       this.$emit("changed", this.files);
+      this.$emit("info_changed", this.files_info);
     },
   },
 };
@@ -122,7 +177,7 @@ export default {
       <input
         type="file"
         style="z-index: 1"
-        accept="video/*"
+        accept="video/*,image/*"
         ref="uploadInput"
         @change="previewImgs"
         multiple
@@ -226,13 +281,13 @@ export default {
       </svg>
 
       <p class="mainMessage">
-        {{ uploadMsg ? uploadMsg : "Click to select or drop your video here" }}
+        {{ uploadMsg ? uploadMsg : "Drop your video or images here" }}
       </p>
 
           <v-btn
               color="primary"
             >
-              Select Video
+              Select Video / Images
             </v-btn>
 
     </div>
@@ -243,8 +298,10 @@ export default {
       </button>
  -->
       <div class="imageHolder" v-for="(img, i) in Imgs" :key="i">
-        <!-- <img :src="img" /> -->
-        <img src="video-thumb.png" />
+
+        <img v-if="files[i].type.startsWith('image')" :src="img" />
+        <img v-if="files[i].type.startsWith('video')" src="video-thumb.png" />
+
         
         <span class="videoname">{{ files[i].name }}</span>
         <span class="delete" style="color: white" @click="deleteImg(--i)">

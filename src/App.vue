@@ -118,9 +118,21 @@
               <!-- <input type="file" id="uploader"> -->
 
               
+              <h3> {{ process_mode }} </h3>
 
-
+              <v-alert
               
+              v-if="invalid_files_message != null"
+              color="pink"
+              dark
+              dismissible
+              type="error"
+              
+              transition="scale-transition"
+            >
+              {{ invalid_files_message }}
+            </v-alert>
+                      
 
                <!-- <v-progress-circular
               :rotate="90"
@@ -163,7 +175,7 @@
                     </div>
  -->
 
-                    <Uploader ref="uploader" v-on:changed="onFilesChanged" />
+                    <Uploader ref="uploader" v-on:changed="onFilesChanged" v-on:info_changed="onFilesInfoChanged " />
                       
                       <!-- v-show="video_files.length > 0"     -->
                     <v-btn
@@ -195,11 +207,13 @@
                     elevation="0"
                   >
 
-                   <h4>Select Background Color</h4>
+                    <h4 v-if="process_mode=='images'">No Settings for images</h4>
+                   <h4 v-if="process_mode=='video'">Select Background Color</h4>
                    
                    <v-color-picker
                   class="ma-5 mb-8"
                   elevation="4"
+                  v-if="process_mode=='video'"
                   :swatches="swatches"
                     show-swatches
                     v-model="color_picker_rgba"
@@ -215,7 +229,7 @@
                   
                   color="primary"
                   class="mb-4"
-                  @click="processVideo"
+                  @click="processFiles"
                   :disabled="video_files.length == 0 || load_state >= 2 || load_state == 0"
                   :loading="load_state >= 2 || load_state == 0"
                 >
@@ -239,14 +253,14 @@
                   :complete="load_state >= 5"
                   step="3"
                 >
-                <v-text>
+                <div>
                   Process Video
                   <v-progress-circular
                       indeterminate
                       size="20"
                       v-if="load_state > 1 && load_state < 5"
                     ></v-progress-circular>
-                </v-text>
+                </div>
                 </v-stepper-step>
 
                 <v-stepper-content step="3">
@@ -303,6 +317,7 @@
                   <v-btn
                     color="primary"
                     class="ma-4"
+                    v-if="process_mode=='video'"
                     :disabled="load_state < 5"
                     @click="downloadVideo"
                   >
@@ -320,6 +335,7 @@
                   <v-btn
                     color="secondary"
                     class="ma-4"
+                    v-if="process_mode=='video'"
                     @click="uploadAnotherVideo"
                     :disabled="load_state < 5"
                   >
@@ -399,6 +415,8 @@
 </template>
 
 
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script> -->
+
 <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.7.0/dist/tf.min.js"></script> -->
 
 <script>
@@ -416,9 +434,14 @@ import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import * as tf from '@tensorflow/tfjs';
 //import { loadGraphModel } from '@tensorflow/tfjs-converter';
 
+//var JSZip = require("jszip");
+
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+
 
 export default {
-  name: 'Free Video Eraser',
+  name: 'App',
 
   
   components: {
@@ -457,6 +480,9 @@ export default {
 
       current_step: 1,
       load_state : 0,
+      process_mode : null,
+
+      invalid_files_message : null,
 
       video: null,
 
@@ -550,6 +576,221 @@ export default {
         // video.style.display = "none";
     },
 
+    async processFiles() {
+
+        if ( this.process_mode == 'video' ) {
+            await this.processVideo();
+        } else if ( this.process_mode == 'images' ) {
+            await this.processImages();
+        }
+        
+    },
+
+    checkFilesMode() {
+
+        // Check that we have a valid set of files to work on 
+        // Valid sets:
+        //  1. Group of images of same dims 
+        //  2. Single video 
+
+        
+
+        const files_info = this.$refs.uploader.files_info;
+
+        for ( const i in files_info ) {
+            if ( files_info[i]['complete'] == false ) {
+                console.log('incomplete');
+                return;
+            }
+        }
+
+        console.log(" about to check these files... " + files_info.length );
+
+        // height: 1024
+        // name: "face-ring.jpg"
+        // type: "image/jpeg"
+        // width: 1024
+        // image
+        // video
+
+        const types = new Set();
+        const dims = new Set();
+
+        for ( const i in files_info ) {
+            
+            const info = files_info[i];
+            types.add( info["type"].slice(0, 5) );
+
+            if ( info["type"].startsWith('image') ) {
+
+                var dim_str = "" + info["width"].toFixed(0) + "x" + info["height"].toFixed(0);
+
+                //dims.add( [info["width"], info["height"] ] );
+                dims.add( dim_str );
+
+                console.log("Image: size: " + info["width"] + " x " + info["height"] );
+            }
+
+        }
+
+        console.log("  dims: " + Array.from(dims).join(', ') + " len: " + dims.size );
+        console.log("  types: " + Array.from(types).join(', ') );
+
+        if ( files_info.length == 0  ) {
+
+            console.log(" NO FILES ---------");
+            this.process_mode = null;
+            this.invalid_files_message = null;
+
+        } else if ( types.has('video') && files_info.length == 1 ) {
+            
+            this.process_mode = 'video';
+            this.invalid_files_message = null;
+
+        } else if ( types.has('image') && dims.size == 1 && types.size == 1 ) {
+
+            this.process_mode = 'images';
+            this.invalid_files_message = null;
+
+        } else {
+
+            //console.log("else ---- " + dims.size + " , " + ty);
+
+            this.process_mode = null;
+
+            const STANDARD_MESSAGE = "Please upload either a single video, or multiple images of the same dimensions";
+
+            // Determine error to show
+            if ( types.has('video') && types.has('image') ) {
+                this.invalid_files_message = STANDARD_MESSAGE + " Don't mix videos and images";
+            } else if ( types.has('image') && dims.size > 1 ) {
+                this.invalid_files_message = STANDARD_MESSAGE + " All images should be the same dimensions, got: " + Array.from(dims).join(', ');
+            } else {
+                this.invalid_files_message = STANDARD_MESSAGE;
+            }
+
+        }
+
+    },
+
+    readFileAsync(file) {
+        return new Promise((resolve, reject) => {
+
+            let reader = new FileReader();
+
+            reader.onload = () => {
+                resolve(reader.result);
+            };
+
+            reader.onerror = reject;
+
+            reader.readAsDataURL(file);
+        })
+    },
+
+    async processImages() {
+
+        this.load_state = 2;
+
+        this.current_step = 3;
+
+        this.processing_overlay = true;
+
+        this.bg_color = [ this.color_picker_rgba['r'] / 255.0,  this.color_picker_rgba['g'] / 255.0, this.color_picker_rgba['b'] / 255.0 ];
+
+        console.log( " process images: " + this.video_files );
+
+        var zip = new JSZip();
+
+        const model = this.tf_model;
+
+        var image_files = this.video_files;
+
+        const num_warmup = 4;
+        for ( var w = 0; w < num_warmup; w++) {
+            image_files.splice(0, 0, image_files[0]);
+        }
+
+        // Set initial recurrent state
+        let [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+
+        // Set downsample ratio
+        const downsample_ratio = tf.tensor(0.5);
+
+        const canvas = document.querySelector('canvas');
+    
+        this.message = 'Reading Images...';
+
+        //var image_files_out = [];
+        for ( const idx in image_files ) {
+
+            const img_file = image_files[idx];
+
+            console.log(" reading image file: " + img_file.name );
+
+            var progress = (idx / (image_files.length-1) ) * 100.0;
+
+            this.progress_value = progress.toFixed(0) + "%";
+
+            await tf.nextFrame();
+
+            let dataURL = await this.readFileAsync(img_file);
+
+            const frame_img = new Image();
+            frame_img.src = dataURL;
+            await frame_img.decode();
+
+            const img = tf.browser.fromPixels( frame_img );
+            const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
+
+            const [fgr, pha, r1o, r2o, r3o, r4o] = await model.executeAsync(
+                {src, r1i, r2i, r3i, r4i, downsample_ratio}, // provide inputs
+                ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']   // select outputs
+            );
+
+            
+            //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg);
+            
+            const img_name = img_file.name;
+
+            const dont_save = idx < num_warmup;
+            //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg, this.bg_color);
+            await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, dont_save);
+
+            //this.drawMatte(null, pha.clone(), canvas, img_path, ffmpeg);
+            canvas.style.background = 'rgb(0, 0, 0)';
+
+            // Dispose old tensors.
+            tf.dispose([img, src, fgr, pha, r1i, r2i, r3i, r4i]);
+
+            // Update recurrent states.
+            [r1i, r2i, r3i, r4i] = [r1o, r2o, r3o, r4o];
+
+            // set to 'processing' state after first frame, since that takes a while
+            if ( idx == 0 ) {
+                this.message = 'Processing frames...';
+                this.load_state = 3;
+                this.processing_overlay = false;
+            }
+
+        } // end for image_files 
+
+
+        this.progress_value = "Creating Zip...";
+        this.message = 'Creating Zip...';
+        this.load_state = 4; 
+
+        zip.generateAsync({type:"blob"})
+        .then(function (blob) {
+            saveAs(blob, "images.zip");
+        });
+
+        this.message = 'Complete';
+        this.progress_value = "Complete";
+
+        this.load_state = 5; // Done
+
+    },
 
     async processVideo() {
 
@@ -567,8 +808,6 @@ export default {
         this.processing_overlay = true;
 
         this.bg_color = [ this.color_picker_rgba['r'] / 255.0,  this.color_picker_rgba['g'] / 255.0, this.color_picker_rgba['b'] / 255.0 ];
-
-        
 
         console.log("Loading...");
 
@@ -711,16 +950,26 @@ export default {
         this.message = 'Creating video...';
         this.load_state = 4; 
 
-        await ffmpeg.run('-framerate', '30', '-pattern_type', 'glob', '-i', 'frames/*.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'out.mp4');
-        const data = ffmpeg.FS('readFile', 'out.mp4');
+        
+        const ext = "mp4";
+        const codec = ext == "mp4" ? 'libx264' : 'libvpx';
+        const video_out_name = "video." + ext;
+        
+        // By default the CRF value can be from 4–63, and 10 is a good starting point. Lower values mean better quality.
+        // ffmpeg -i input.mp4 -c:v libvpx -crf 10 -b:v 1M -c:a libvorbis output.webm
+
+        await ffmpeg.run('-framerate', '30', '-pattern_type', 'glob', '-i', 'frames/*.png', '-c:v', codec, '-pix_fmt', 'yuv420p', video_out_name);
+
+        const data = ffmpeg.FS('readFile', video_out_name);
 
         const video = document.getElementById('output-video');
-        video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+        //video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+        video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/'+ext }));
         video.style.display = "block";
 
         const video_download = document.getElementById('videolink');
         video_download.href = video.src;
-        video_download.download = "video.mp4";
+        video_download.download = video_out_name;
 
         this.message = '';
 
@@ -805,6 +1054,60 @@ export default {
 
     },
 
+    async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, dont_save) {
+
+        const rgba = tf.tidy(() => {
+          const rgb = fgr.squeeze(0).mul(255).cast('int32');
+          const a = alpha_matte.squeeze(0).mul(255).cast('int32');
+          return tf.concat([rgb, a], -1);
+        });
+
+        fgr && fgr.dispose();
+        alpha_matte && alpha_matte.dispose();
+
+        const [height, width] = rgba.shape.slice(0, 2);
+        const pixelData = new Uint8ClampedArray(await rgba.data());
+        const imageData = new ImageData(pixelData, width, height);
+
+        canvas.width = width;
+        canvas.height = height;
+
+        canvas.getContext('2d').putImageData(imageData, 0, 0);
+
+        //var img_png = new png.PNG({width: width, height: height});
+        //img_png.data = Buffer.from(pixelData);
+        //img_png.pack().pipe(fs.createWriteStream('tick.png'))
+        // This does not work -- encodes the base64 string as a file and not a real PNG
+        //await ffmpeg.FS('writeFile', img_path_out, img_png.pack());
+
+        const imgAsDataURL = canvas.toDataURL("image/png", 1);
+        const img_blob = this.dataURItoBlob(imgAsDataURL);
+
+        if ( img_name.endsWith('.jpg') ) {
+            img_name = img_name.replace(".jpg", ".png");
+        }
+
+        
+
+        // TODO: call canvas.blob directly ? 
+        if ( dont_save == false ) {
+            console.log( " ====> Zipping image: " + img_name);
+            zip.file(img_name, img_blob);
+        } else {
+            console.log( " ====> SKIPPING warmup image: " + img_name);
+        }
+        
+        // screen.toBlob(function (blob) {
+        //     zip.file("hello.png", blob);
+        // });
+
+        //await ffmpeg.FS('writeFile', img_path_out, img_blob);
+        //console.log("Wrote file: " + img_path_out );
+
+        rgba.dispose();
+
+    },
+
 
     async drawMatte(fgr, alpha_matte, canvas, img_path_out, ffmpeg, bg_color) {
 
@@ -821,7 +1124,17 @@ export default {
         //   return tf.concat([rgb, a], -1);
 
         // });
+        console.log(bg_color);
 
+        // real alpha channel == matte 
+        // const rgba = tf.tidy(() => {
+        //   const rgb = fgr.squeeze(0).mul(255).cast('int32');
+        //   const a = alpha_matte.squeeze(0).mul(255).cast('int32');
+        //   return tf.concat([rgb, a], -1);
+        // });
+
+        // blends the foreground with a bg color based on alpha matte -
+        // alpha channel is 255 
         const rgba = tf.tidy(() => {
             
             const matte = alpha_matte.squeeze(0);
@@ -865,8 +1178,8 @@ export default {
 
         //console.log(" ---> Got png buffer: " + imgAsDataURL.length );
 
-        const img_blog = this.dataURItoBlob(imgAsDataURL);
-        await ffmpeg.FS('writeFile', img_path_out, img_blog);
+        const img_blob = this.dataURItoBlob(imgAsDataURL);
+        await ffmpeg.FS('writeFile', img_path_out, img_blob);
 
         //console.log("Wrote file: " + img_path_out );
 
@@ -882,9 +1195,15 @@ export default {
     },
 
     onFilesChanged(files) {
-      this.video_files = files
+        console.log("files changed! " + files );
+        this.video_files = files;
+        
     },
-
+    onFilesInfoChanged(files_info) {
+        console.log('info changed');
+        this.checkFilesMode();
+    },
+ 
     onColorChanged(c) {
         console.log("Color:" + c);
     }
