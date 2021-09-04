@@ -280,10 +280,11 @@ export default {
         </g>
       </svg>
 
-      <p class="mainMessage">
+      <p class="mainMessage pb-4">
         Drop a single video or multiple images here
       </p>
-      <p class="subMessage">Images should be of the same dimensions</p>
+      
+      <!-- <p class="subMessage">Images should be of the same dimensions</p> -->
 
           <v-btn
               color="primary"

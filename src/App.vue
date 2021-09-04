@@ -332,7 +332,39 @@
                     elevation="0"
                   >
 
-                    <h4 v-if="process_mode=='images'">No Settings for images</h4>
+                  <div v-if="process_mode=='images'">
+                    <v-switch
+                      v-model="treat_images_as_sequence"
+                      label="Treat images as sequence"
+                    ></v-switch>
+
+                    
+
+                  </div>
+
+                  <v-slider
+                        min="0.1"
+                        max="0.8"
+                        step="0.025"
+                      v-model="downsample_ratio"
+                      label="Downsample Ratio - ( lower is faster ) "
+                      thumb-color="red"
+                      thumb-label="always"
+                    ></v-slider>
+
+
+                    <v-slider
+                        min="0"
+                        max="6"
+                        step="1"
+                      v-model="num_warmup"
+                      label="Num Warmup Iterations - ( lower is faster ) "
+                      thumb-color="red"
+                      thumb-label="always"
+                    ></v-slider>
+
+                    <!-- <h4 v-if="process_mode=='images'">No Settings for images</h4> -->
+
                    <h4 v-if="process_mode=='video'">Select Background Color</h4>
                    
                    <v-color-picker
@@ -593,7 +625,9 @@ export default {
 
       progress_value: "",
 
-      num_warmup: 5,
+      num_warmup: 3,
+      treat_images_as_sequence : false,
+      downsample_ratio : 0.2,
 
 
       snackbar: false,
@@ -769,10 +803,15 @@ export default {
             this.process_mode = 'video';
             this.invalid_files_message = null;
 
-        } else if ( types.has('image') && dims.size == 1 && types.size == 1 ) {
+        //} else if ( types.has('image') && dims.size == 1 && types.size == 1 ) {
+        } else if ( types.has('image') && types.size == 1 ) {
 
             this.process_mode = 'images';
             this.invalid_files_message = null;
+
+            // if all images are the same size dont reset the recurrent state per image
+            this.treat_images_as_sequence = (dims.size == 1);
+            
 
         } else {
 
@@ -824,27 +863,30 @@ export default {
 
         var zip = new JSZip();
 
-        const model = this.tf_model;
+        //const model = this.tf_model;
 
         var image_files = this.video_files;
         const single_image = image_files.length == 1;
 
-        const num_warmup = this.num_warmup;
-        for ( var w = 0; w < num_warmup; w++) {
-            image_files.splice(0, 0, image_files[0]);
-        }
+        // const num_warmup = this.num_warmup;
+        // for ( var w = 0; w < num_warmup; w++) {
+        //     image_files.splice(0, 0, image_files[0]);
+        // }
 
         // Set initial recurrent state
         let [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
 
         // Set downsample ratio
-        const downsample_ratio = tf.tensor(0.5);
+        const downsample_ratio = tf.tensor(this.downsample_ratio);
 
         const canvas = document.querySelector('canvas');
-    
+        canvas.style.background = 'rgb(0, 0, 0)';
+
         this.message = 'Reading Images...';
 
-        //var image_files_out = [];
+        //var prev_width = -1;
+        //var prev_height = -1;
+
         for ( const idx in image_files ) {
 
             const img_file = image_files[idx];
@@ -863,34 +905,51 @@ export default {
             frame_img.src = dataURL;
             await frame_img.decode();
 
+            //const img_w = frame_img.width;
+            //const img_h = frame_img.height;
+
+            // if ( (idx > 0) && (img_w != prev_width || img_h != prev_height ) ) {
+            //     console.log(" REELOADgin TF model!!");
+            //     //this.tf_model = await tf.loadGraphModel('./model/model.json');
+            //     [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+            // }
+            
+            // reset recurrent state for each image
+            if ( !this.treat_images_as_sequence ) {
+                [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+            }
+
+            //prev_width = img_w;
+            //prev_height = img_h;
+
             const img = tf.browser.fromPixels( frame_img );
             const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
 
-            const [fgr, pha, r1o, r2o, r3o, r4o] = await model.executeAsync(
-                {src, r1i, r2i, r3i, r4i, downsample_ratio}, // provide inputs
-                ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']   // select outputs
-            );
+            var fgr, pha, r1o, r2o, r3o, r4o = null;
 
-            
-            //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg);
-            
+            for ( var wi = 0; wi < (this.num_warmup+1); wi ++ ) {
+
+                [fgr, pha, r1o, r2o, r3o, r4o] = await this.tf_model.executeAsync(
+                    {src, r1i, r2i, r3i, r4i, downsample_ratio}, // provide inputs
+                    ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']   // select outputs
+                );
+
+                // dispose recurrent tensors
+                tf.dispose([r1i, r2i, r3i, r4i]);
+                
+                // Update recurrent states.
+                [r1i, r2i, r3i, r4i] = [r1o, r2o, r3o, r4o];
+
+            }
+
+
             const img_name = img_file.name;
-
-            const dont_save = idx < num_warmup;
-
             const download_file = (single_image) && (idx == image_files.length - 1);
 
-            //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg, this.bg_color);
-            await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, dont_save, download_file);
-
-            //this.drawMatte(null, pha.clone(), canvas, img_path, ffmpeg);
-            canvas.style.background = 'rgb(0, 0, 0)';
-
+            await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, download_file);
+            
             // Dispose old tensors.
-            tf.dispose([img, src, fgr, pha, r1i, r2i, r3i, r4i]);
-
-            // Update recurrent states.
-            [r1i, r2i, r3i, r4i] = [r1o, r2o, r3o, r4o];
+            tf.dispose([img, src, fgr, pha]);
 
             // set to 'processing' state after first frame, since that takes a while
             if ( idx == 0 ) {
@@ -1195,7 +1254,7 @@ export default {
 
     },
 
-    async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, dont_save, download_file) {
+    async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, download_file) {
 
         const rgba = tf.tidy(() => {
           const rgb = fgr.squeeze(0).mul(255).cast('int32');
@@ -1235,13 +1294,10 @@ export default {
         }
 
         // TODO: call canvas.blob directly ? 
-        if ( dont_save == false ) {
-            console.log( " ====> Zipping image: " + img_name);
-            zip.file(img_name, img_blob);
-        } else {
-            console.log( " ====> SKIPPING warmup image: " + img_name);
-        }
         
+        console.log( " ====> Zipping image: " + img_name);
+        zip.file(img_name, img_blob);
+    
         if ( download_file ) {
             //saveAs(img_blob, "freebackgrounderaser.com_" + img_name );
             saveAs(imgAsDataURL, img_name );
