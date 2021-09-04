@@ -21,7 +21,7 @@
         class="grey lighten-4 py-4 text-center"
         cols="12"
       >
-        {{ new Date().getFullYear() }} — <strong>Cool Stuff</strong>
+        {{ new Date().getFullYear() }} — <strong>Blue Berries</strong>
       </v-col>
     </v-row>
   </v-footer>
@@ -31,7 +31,11 @@
   export default {
     data: () => ({
       links: [
-        
+        "hello",
+        "darkness",
+        "my",
+        "old",
+        "friend"
       ],
       icons: [
         'mdi-facebook',

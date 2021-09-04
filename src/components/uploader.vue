@@ -298,14 +298,18 @@ export default {
         {{ clearAll ? clearAll : "Clear All" }}
       </button>
  -->
-      <div class="imageHolder" v-for="(img, i) in Imgs" :key="i">
+      <h4 class="pb-4"> {{ Imgs.length }} Total Files
+      </h4>
+
+      <div class="imageHolder" v-for="(img, i) in Imgs.slice(0, 10)" :key="i">
 
         <img v-if="files[i].type.startsWith('image')" :src="img" />
         <img v-if="files[i].type.startsWith('video')" src="video-thumb.png" />
 
         
-        <span class="videoname">{{ files[i].name }}</span>
-        <span class="delete" style="color: white" @click="deleteImg(--i)">
+        <span class="videoname">{{ files[i].name.slice(0, 20) }}</span>
+
+        <span class="delete" style="color: white" @click="deleteImg(i)">
           <svg
             class="icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -323,6 +327,10 @@ export default {
         </span>
         <!-- <div class="plus" @click="append" v-if="++i == Imgs.length">+</div> -->
       </div>
+
+      <div v-if="Imgs.length > 10"> ... {{ Imgs.length - 10 }} additional files
+      </div>
+
     </div>
   </div>
 </template>
@@ -349,7 +357,9 @@ export default {
 }
 .error {
   text-align: center;
-  color: red;
+  color: white;
+  border-radius: 6px;
+  padding: 4px;
   font-size: 15px;
 }
 .beforeUpload {

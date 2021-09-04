@@ -2,7 +2,9 @@
   <v-app>
 
     <!-- <v-toolbar dense dark color="teal" class="pa-0"> -->
-        <v-toolbar class="pa-0 lighten-1" color="white" flat>
+        <!-- <v-toolbar class="pa-0 lighten-1" color="white" > -->
+
+    <v-toolbar dense dark > 
 
             
 
@@ -108,7 +110,7 @@
       <!-- <HelloWorld/> -->
       <v-container >
         
-        <v-row class="mt-2">
+        <v-row class="mt-4">
 <!--           <v-col
             cols="12"
             sm="2"
@@ -202,14 +204,10 @@
                 <v-col cols="4" class="">
                     <img src="demo.jpg" height="140" class="rounded ma-4"/>
                 </v-col>
-
+<!-- 
                 <v-col cols="4" class="my-auto text-center">
                     <span style="font-size: 170%; font-weight: bold; color: #886677;"><u>Free</u> Background Removal</span>
                     <p class="" style="font-size: 150%;  color: #886677;">for images and videos</p>
-                </v-col>
-
-                <!-- <v-col cols="3" class="my-auto text-center">
-                    <strong class="ml-1"> Free background removal <br/> for images and videos</strong>
                 </v-col> -->
 
                 <v-col cols="4" class="my-auto">
@@ -218,13 +216,53 @@
                         <v-icon color="green" class="pr-2">
                             mdi-checkbox-marked-circle
                         </v-icon>
-                    Completely in browser</p>
+                    Works with videos and images</p>
+
+                    <p class="ml-6">
+                        <v-icon color="green" class="pr-2">
+                            mdi-checkbox-marked-circle
+                        </v-icon>
+                    Totally Free!
+                    </p>
 
                     <p class="ml-6">
                         <v-icon color="green" class="pr-2">
                             mdi-checkbox-marked-circle
                         </v-icon>
                     No data leaves your computer!
+                    </p>
+                    
+                    
+
+                </v-col>
+
+
+                <!-- <v-col cols="3" class="my-auto text-center">
+                    <strong class="ml-1"> Free background removal <br/> for images and videos</strong>
+                </v-col> -->
+
+                <v-col cols="4" class="my-auto">
+                    
+                    <!-- <p class="ml-6"> 
+                        <v-icon color="green" class="pr-2">
+                            mdi-checkbox-marked-circle
+                        </v-icon>
+                    Completely in browser</p> -->
+
+                    
+
+                    <p class="ml-6">
+                        <v-icon color="red" class="pr-2">
+                            mdi-close-circle
+                        </v-icon>
+                    A bit slow in beta version
+                    </p>
+                    
+                    <p class="ml-6">
+                        <v-icon color="red" class="pr-2">
+                            mdi-close-circle
+                        </v-icon>
+                    Limit videos to 5 - 10 MB
                     </p>
                     
 
@@ -248,7 +286,7 @@
 
                 <!-- =========== STEP 1 ========== -->
 
-                  Select Video
+                  Select Video or Images
                   
                 </v-stepper-step>
 
@@ -267,7 +305,7 @@
                       <!-- v-show="video_files.length > 0"     -->
                     <v-btn
                       
-                      :disabled="video_files.length == 0"
+                      :disabled="video_files.length == 0 || invalid_files_message != null"
                       color="primary"
                       class="mb-6"
                       @click="nextStep"
@@ -356,7 +394,7 @@
                     color="grey lighten-4"
                     class="mb-4 pa-4"
                     elevation="0"
-                    min-height="500"
+                    min-height="210"
                   >
 
                   <v-overlay :value="processing_overlay" absolute opacity="0.2">
@@ -426,7 +464,7 @@
                     @click="uploadAnotherVideo"
                     :disabled="load_state < 5"
                   >
-                    Upload Another Video
+                    Select Another Video
                   </v-btn>
 
 <!--                   <v-btn text>
@@ -444,15 +482,10 @@
             <!-- </v-sheet> -->
 
 
-                  <v-card
-                    
+                  <!-- <v-card
                     class="mt-12"
                     rounded
-                    
-                  >
-
-
-
+                    >
                     <v-list-item>
                       <v-list-item-content>
                         <v-list-item-title><h4>Notes</h4></v-list-item-title>
@@ -474,7 +507,7 @@
                         </v-list-item-subtitle>
                       </v-list-item-content>
                     </v-list-item>
-                  </v-card>
+                  </v-card> -->
 
 
 
@@ -747,7 +780,7 @@ export default {
 
             this.process_mode = null;
 
-            const STANDARD_MESSAGE = "Please upload either a single video, or multiple images of the same dimensions";
+            const STANDARD_MESSAGE = "Please select either a single video, or multiple images of the same dimensions";
 
             // Determine error to show
             if ( types.has('video') && types.has('image') ) {
@@ -794,6 +827,7 @@ export default {
         const model = this.tf_model;
 
         var image_files = this.video_files;
+        const single_image = image_files.length == 1;
 
         const num_warmup = this.num_warmup;
         for ( var w = 0; w < num_warmup; w++) {
@@ -843,8 +877,11 @@ export default {
             const img_name = img_file.name;
 
             const dont_save = idx < num_warmup;
+
+            const download_file = (single_image) && (idx == image_files.length - 1);
+
             //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg, this.bg_color);
-            await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, dont_save);
+            await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, dont_save, download_file);
 
             //this.drawMatte(null, pha.clone(), canvas, img_path, ffmpeg);
             canvas.style.background = 'rgb(0, 0, 0)';
@@ -869,15 +906,30 @@ export default {
         this.message = 'Creating Zip...';
         this.load_state = 4; 
 
-        zip.generateAsync({type:"blob"})
-        .then(function (blob) {
-            saveAs(blob, "images.zip");
-        });
+        if ( !single_image ) {
 
-        this.message = 'Complete';
-        this.progress_value = "Complete";
+            const my_this = this; // is this bad? 
 
-        this.load_state = 5; // Done
+            zip.generateAsync({type:"blob"})
+            .then(function (blob) {
+
+                saveAs(blob, "FreeBackgroundEraser_images.zip");
+
+                my_this.message = 'Complete - Image(s) Downloaded';
+                my_this.progress_value = "Complete";
+                my_this.load_state = 5; // Done
+
+            });
+
+        } else {
+
+            this.message = 'Complete - Image(s) Downloaded';
+            this.progress_value = "Complete";
+            this.load_state = 5; // Done
+
+        }
+
+        
 
     },
 
@@ -1143,7 +1195,7 @@ export default {
 
     },
 
-    async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, dont_save) {
+    async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, dont_save, download_file) {
 
         const rgba = tf.tidy(() => {
           const rgb = fgr.squeeze(0).mul(255).cast('int32');
@@ -1174,9 +1226,13 @@ export default {
 
         if ( img_name.endsWith('.jpg') ) {
             img_name = img_name.replace(".jpg", ".png");
+        } else if ( img_name.endsWith('.jpeg') ) {
+            img_name = img_name.replace(".jpeg", ".png");
+        } else if ( img_name.endsWith('.gif') ) {
+            img_name = img_name.replace(".gif", ".png");
+        } else if ( img_name.endsWith('.bmp') ) {
+            img_name = img_name.replace(".bmp", ".png");
         }
-
-        
 
         // TODO: call canvas.blob directly ? 
         if ( dont_save == false ) {
@@ -1186,6 +1242,11 @@ export default {
             console.log( " ====> SKIPPING warmup image: " + img_name);
         }
         
+        if ( download_file ) {
+            //saveAs(img_blob, "freebackgrounderaser.com_" + img_name );
+            saveAs(imgAsDataURL, img_name );
+        }
+
         // screen.toBlob(function (blob) {
         //     zip.file("hello.png", blob);
         // });
