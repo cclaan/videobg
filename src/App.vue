@@ -4,20 +4,34 @@
     <!-- <v-toolbar dense dark color="teal" class="pa-0"> -->
         <!-- <v-toolbar class="pa-0 lighten-1" color="white" > -->
 
-    <v-toolbar dense dark > 
+    <v-toolbar dark > 
+    
 
-            
-
-      <!-- <v-btn icon>
+    <!-- <v-btn icon>
         <v-icon>mdi-magnify</v-icon>
+    </v-btn>
+ -->
+<!--           <v-toolbar-title>                 
+            Free Background Eraser.com
+          </v-toolbar-title>
+ -->
 
-      </v-btn>
+          <!-- <v-spacer></v-spacer> -->
+          <!-- <v-img src="logo.png"  class="shrink mr-2" contain/> -->
+          <!-- <v-img src="logo.png"  height="48" class="shrink" contain/> -->
+          <a href='https://www.FreeBackgroundEraser.com' style=" height: 42px;">
+            <img src="logo.png" height="42"  alt="FreeBackgroundEraser.com Logo - Remove backgrounds from images and video for free in the browser"/>
+          </a>
 
-            <v-toolbar-title>
-                
-            Free Background Eraser.com</v-toolbar-title>
+          <!-- <v-spacer></v-spacer> -->
 
-            <v-spacer></v-spacer> -->
+          
+
+    </v-toolbar>
+
+
+<!--     <v-toolbar dense dark > 
+
 
       <v-row>
         
@@ -31,30 +45,15 @@
 
         <strong class="ml-1" style="color: gray;">{{ loading_message }}</strong>
         
-
         </v-col>
 
         <v-col class="d-flex justify-space-around">
-          
-          <!-- <v-toolbar-title class="white--text"></v-toolbar-title> -->
 
           <div style="position:relative;" class="text-center">
 
-<!--        <v-img
-              alt="Free Background Eraser.com logo"
-              style="display: inline-block;"
-              class="my-auto mt-6"
-              src="android-chrome-192x192.png"
-              width="35"
-            />
--->
+            <img src="android-chrome-192x192.png" width="26px" class="mr-3 pt-3 hidden-sm-and-down" style="background-color: red" />
+            <h3 style='display: inline-block; color: gray;'>Free Background Eraser.com</h3>
             
-            <img src="android-chrome-192x192.png" width="32px;" style="position: absolute; left: -48px; top:0px;" />
-            <h2 style='display: inline-block; color: gray;'>Free Background Eraser</h2>
-            <span style="color: gray;">.com</span>
-            
-
-
           </div>
 
 
@@ -65,7 +64,8 @@
         </v-col>
 
     </v-row>
-    </v-toolbar>
+
+    </v-toolbar> -->
 
 <!-- 
     <v-app-bar
@@ -201,8 +201,10 @@
 
             <v-row>
                 
-                <v-col cols="4" class="">
-                    <img src="demo.jpg" height="140" class="rounded ma-4"/>
+                <v-col cols="4">
+                    <!-- <img src="demo.jpg" height="140" class="rounded ma-4"/> -->
+                    <img src="demo.jpg" :height="$vuetify.breakpoint.smAndDown ? 100 : 140" class="rounded ma-4"/>
+                    
                 </v-col>
 <!-- 
                 <v-col cols="4" class="my-auto text-center">
@@ -210,7 +212,7 @@
                     <p class="" style="font-size: 150%;  color: #886677;">for images and videos</p>
                 </v-col> -->
 
-                <v-col cols="4" class="my-auto">
+                <v-col cols="4" class="my-auto hidden-sm-and-down">
                     
                     <p class="ml-6"> 
                         <v-icon color="green" class="pr-2">
@@ -241,7 +243,7 @@
                     <strong class="ml-1"> Free background removal <br/> for images and videos</strong>
                 </v-col> -->
 
-                <v-col cols="4" class="my-auto">
+                <v-col cols="4" class="my-auto hidden-sm-and-down">
                     
                     <!-- <p class="ml-6"> 
                         <v-icon color="green" class="pr-2">
@@ -276,8 +278,28 @@
                 
             </v-row>
 
+            <v-divider></v-divider>
 
-              <v-divider></v-divider>
+            <div class="pt-4 pl-6">
+
+              <v-progress-circular
+              indeterminate
+              size="20"
+              color="primary"
+              class="mr-4"
+              v-if="load_state == 0"
+              ></v-progress-circular>
+
+              <v-icon color="green" class="pr-2" v-if="load_state > 0">
+                            mdi-checkbox-marked-circle
+                        </v-icon>
+
+            <span class="ml-1" style="color: gray;">Status: </span>
+            <span class="ml-1" style="color: gray;">{{ loading_message }}</span>
+            </div>
+
+              <!-- <v-divider></v-divider> -->
+                
                 <v-stepper-step
                   :complete="current_step > 1"
                   
@@ -332,7 +354,7 @@
                     elevation="0"
                   >
 
-                  <div v-if="process_mode=='images'">
+                  <div v-if="process_mode=='images' && video_files.length > 1">
                     <v-switch
                       v-model="treat_images_as_sequence"
                       label="Treat images as sequence"
@@ -342,25 +364,26 @@
 
                   </div>
 
+                  Downsample Ratio: <strong>{{ downsample_ratio.toFixed(1) }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
                   <v-slider
                         min="0.1"
                         max="0.8"
                         step="0.025"
                       v-model="downsample_ratio"
-                      label="Downsample Ratio - ( lower is faster ) "
+                      
                       thumb-color="red"
-                      thumb-label="always"
+                      
                     ></v-slider>
 
-
+                    Num Warmup Iterations: <strong>{{ num_warmup }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
                     <v-slider
                         min="0"
                         max="6"
                         step="1"
                       v-model="num_warmup"
-                      label="Num Warmup Iterations - ( lower is faster ) "
+                      
                       thumb-color="red"
-                      thumb-label="always"
+                      
                     ></v-slider>
 
                     <!-- <h4 v-if="process_mode=='images'">No Settings for images</h4> -->
@@ -550,7 +573,7 @@
       </v-container>
 
       <br/><br/><br/><br/>
-      <Footer/>
+      <Footer :version_number="version_number"/>
 
 
 
@@ -615,6 +638,8 @@ export default {
         'Image BG Remover',
       ],
 
+      version_number: 0.1, 
+
       video_files : [],
 
       toggle_exclusive: undefined,
@@ -627,7 +652,7 @@ export default {
 
       num_warmup: 3,
       treat_images_as_sequence : false,
-      downsample_ratio : 0.2,
+      downsample_ratio : 0.5,
 
 
       snackbar: false,
@@ -691,8 +716,8 @@ export default {
 
         console.log("ffmpeg loaded ------------- ");
 
-        this.message = "Loading TF model...";
-        this.loading_message = "Loading TF Model...";
+        this.message = "Loading model...";
+        this.loading_message = "Loading Model...";
         this.tf_model = await tf.loadGraphModel('./model/model.json');
         
         console.log("tf model loaded ------------- ");
@@ -1024,7 +1049,7 @@ export default {
         let [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
 
         // Set downsample ratio
-        const downsample_ratio = tf.tensor(0.5);
+        const downsample_ratio = tf.tensor(this.downsample_ratio);
 
         const canvas = document.querySelector('canvas');
 
