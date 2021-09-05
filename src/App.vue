@@ -572,8 +572,9 @@
 
       </v-container>
 
-      <br/><br/><br/><br/>
-      <Footer :version_number="version_number"/>
+      
+
+      <Footer class="my-4" :version_number="version_number"/>
 
 
 
@@ -1018,6 +1019,10 @@ export default {
     },
 
     async processVideo() {
+
+        // TODO:
+        //  - https://video.stackexchange.com/questions/19873/extract-specific-video-frames
+        //  - https://superuser.com/questions/1009969/how-to-extract-a-frame-out-of-a-video-using-ffmpeg
 
         this.load_state = 2;
 

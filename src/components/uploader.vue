@@ -284,7 +284,7 @@ export default {
         Drop a single video or multiple images here
       </p>
       
-      <!-- <p class="subMessage">Images should be of the same dimensions</p> -->
+      <p class="subMessage">( No data leaves your computer )</p>
 
           <v-btn
               color="primary"

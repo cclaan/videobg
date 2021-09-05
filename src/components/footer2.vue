@@ -21,12 +21,12 @@
       </v-btn>
       
       <v-col
-        class="grey lighten-4 py-6 text-center"
+        class="grey lighten-4 py-4 text-center"
         cols="12"
       >
 
       <p style="color: #888;">
-        Built with <a href='https://github.com/ffmpegwasm'>ffmpeg wasm </a> and <a href='https://www.tensorflow.org/js'>tensorflow.js</a>
+        Built with <a href='https://github.com/ffmpegwasm'>ffmpeg wasm </a> and <a href='https://www.tensorflow.org/js'>tensorflow.js</a> and <a href='https://github.com/PeterL1n/RobustVideoMatting'>Robust Video Matting</a>
       </p>
 
       <p style="color: #888;">
@@ -37,7 +37,7 @@
         App Version - {{ version_number }}
       </p>
       <p style="color: #888;">
-        {{ new Date().getFullYear() }} — <strong>Laan Labs</strong>
+        {{ new Date().getFullYear() }} — <strong>Fun Labs</strong>
       </p>
 
       </v-col>
@@ -50,8 +50,8 @@
     data: () => ({
       email: "cc@laan.com",
       links: [
-        ["homepage", "https://labs.laan.com"],
-        ["twitter", "https://twitter.com/laanlabs"]
+        //["homepage", "https://labs.laan.com"],
+        //["twitter", "https://twitter.com/laanlabs"]
       ],
 
       // icons: [
