@@ -760,7 +760,7 @@ export default {
             //this.invalid_files_message = "There was an error loading a library. You may be on a slower internet connection. Try refreshing the page";
             
             
-            this.invalid_files_message = "Video support failed to load. Chrome browser is required for videos. If you are on a slow connection, try refreshing the page";
+            this.invalid_files_message = "Video support failed to load. Desktop Chrome browser is required for videos. If you are using Desktop Chrome, but on a slow connection, try refreshing the page";
 
             //this.load_state = -1;
             this.video_enabled = false;
@@ -1001,7 +1001,32 @@ export default {
             //prev_width = img_w;
             //prev_height = img_h;
 
-            const img = tf.browser.fromPixels( frame_img );
+            var img = tf.browser.fromPixels( frame_img );
+
+            console.log("tf image: " + img.shape );
+            var [height, width] = img.shape.slice(0, 2);
+
+            const MAX_IMAGE_DIM = 1600;
+
+            if ( Math.max(width, height) > MAX_IMAGE_DIM ) {
+                
+                if ( width > height ) {
+
+                    height = height * (MAX_IMAGE_DIM / width);
+                    height = Math.round(height);
+                    width = MAX_IMAGE_DIM;
+
+                } else {
+                    width = width * (MAX_IMAGE_DIM / height);
+                    width = Math.round(width);
+                    height = MAX_IMAGE_DIM;
+                }
+
+                console.log(" tf resizing image to : " + width + " x " + height );
+                img = tf.image.resizeBilinear(img, [height, width]);
+            }
+
+
             const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
 
             var fgr, pha, r1o, r2o, r3o, r4o = null;
@@ -1192,7 +1217,32 @@ export default {
                 //const tfimage = tfnode.node.decodeImage(imageBuffer);
                 //const img = tfnode.node.decodeImage( await fetchFile(img_path) );
                 //const imageData = new ImageData(await fetchFile(img_path) , );
-                const img = tf.browser.fromPixels( frame_img );
+                var img = tf.browser.fromPixels( frame_img );
+
+
+
+                console.log("tf image: " + img.shape );
+                var [height, width] = img.shape.slice(0, 2);
+
+                const MAX_IMAGE_DIM = 1600;
+
+                if ( Math.max(width, height) > MAX_IMAGE_DIM ) {
+                    
+                    if ( width > height ) {
+
+                        height = height * (MAX_IMAGE_DIM / width);
+                        height = Math.round(height);
+                        width = MAX_IMAGE_DIM;
+
+                    } else {
+                        width = width * (MAX_IMAGE_DIM / height);
+                        width = Math.round(width);
+                        height = MAX_IMAGE_DIM;
+                    }
+
+                    console.log(" tf resizing image to : " + width + " x " + height );
+                    img = tf.image.resizeBilinear(img, [height, width]);
+                }
 
                 //const img = await webcam.capture();
                 const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
