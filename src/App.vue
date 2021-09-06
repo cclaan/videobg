@@ -877,6 +877,9 @@ export default {
 
     async processImages() {
 
+        //ga('send', 'event', 'process', 'images');
+        this.$gtag.event('process_images');
+
         this.load_state = 2;
 
         this.current_step = 3;
@@ -1003,6 +1006,7 @@ export default {
                 my_this.message = 'Complete - Image(s) Downloaded';
                 my_this.progress_value = "Complete";
                 my_this.load_state = 5; // Done
+                this.$gtag.event('process_images_done');
 
             });
 
@@ -1011,6 +1015,7 @@ export default {
             this.message = 'Complete - Image(s) Downloaded';
             this.progress_value = "Complete";
             this.load_state = 5; // Done
+            this.$gtag.event('process_images_done');
 
         }
 
@@ -1019,6 +1024,8 @@ export default {
     },
 
     async processVideo() {
+
+        this.$gtag.event('process_video');
 
         // TODO:
         //  - https://video.stackexchange.com/questions/19873/extract-specific-video-frames
@@ -1206,7 +1213,7 @@ export default {
         this.load_state = 5; // Done
 
       
-        
+        this.$gtag.event('process_video_done');
 
 
 
