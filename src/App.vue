@@ -327,7 +327,7 @@
                       <!-- v-show="video_files.length > 0"     -->
                     <v-btn
                       
-                      :disabled="video_files.length == 0 || invalid_files_message != null"
+                      :disabled="video_files.length == 0 || invalid_files_message != null || load_state < 0"
                       color="primary"
                       class="mb-6"
                       @click="nextStep"
@@ -713,13 +713,37 @@ export default {
         this.message = "Loading FFMPEG...";
         this.loading_message = "Loading FFMPEG...";
         this.ffmpeg = createFFmpeg({ log: true });
-        await this.ffmpeg.load();
+
+        try {
+            await this.ffmpeg.load();
+
+        } catch(err) {
+            this.loading_message = "Error Loading FFMPEG";
+            this.message = "Error Loading FFMPEG...";
+            this.invalid_files_message = "There was an error loading a library. You may be on a slower internet connection. Try refreshing the page";
+            this.load_state = -1;
+            this.$gtag.event('error_ffmpeg_load');
+            return;
+        }
+
+        
 
         console.log("ffmpeg loaded ------------- ");
 
         this.message = "Loading model...";
         this.loading_message = "Loading Model...";
-        this.tf_model = await tf.loadGraphModel('./model/model.json');
+
+        try {
+            this.tf_model = await tf.loadGraphModel('./model/model.json');
+            
+        } catch(err) {
+            this.loading_message = "Error Loading tf.js model";
+            this.message = "Error Loading tf.js model";
+            this.invalid_files_message = "There was an error loading the model. You may be on a slower internet connection. Try refreshing the page";
+            this.load_state = -1;
+            this.$gtag.event('error_tfjs_load');
+            return;
+        }
         
         console.log("tf model loaded ------------- ");
 
