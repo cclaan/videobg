@@ -11,6 +11,7 @@ export default {
     };
   },
   props: {
+    video_enabled: Boolean,
     max: Number,
     uploadMsg: String,
     maxError: String,
@@ -177,7 +178,7 @@ export default {
       <input
         type="file"
         style="z-index: 1"
-        accept="video/*,image/*"
+        :accept="video_enabled ? 'video/*,image/*' : 'image/*'"
         ref="uploadInput"
         @change="previewImgs"
         multiple
@@ -281,7 +282,7 @@ export default {
       </svg>
 
       <p class="mainMessage pb-4">
-        Drop a single video or multiple images here
+        Drop {{ video_enabled ? "a single video or multiple" : "" }} images here
       </p>
       
       <p class="subMessage">( No data leaves your computer )</p>
@@ -289,7 +290,7 @@ export default {
           <v-btn
               color="primary"
             >
-              Select Video / Images
+              Select {{ video_enabled ? "Video /" : "" }} Images
             </v-btn>
 
     </div>

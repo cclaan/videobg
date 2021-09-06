@@ -259,6 +259,13 @@
                         </v-icon>
                     A bit slow in beta version
                     </p>
+
+                    <p class="ml-6">
+                        <v-icon color="red" class="pr-2">
+                            mdi-close-circle
+                        </v-icon>
+                    Chrome required for video
+                    </p>
                     
                     <p class="ml-6">
                         <v-icon color="red" class="pr-2">
@@ -308,7 +315,8 @@
 
                 <!-- =========== STEP 1 ========== -->
 
-                  Select Video or Images
+                  <v-text v-if="video_enabled">Select Video or Images</v-text>
+                  <v-text v-if="!video_enabled">Select Images</v-text>
                   
                 </v-stepper-step>
 
@@ -322,7 +330,7 @@
                     </div>
  -->
 
-                    <Uploader ref="uploader" v-on:changed="onFilesChanged" v-on:info_changed="onFilesInfoChanged " />
+                    <Uploader ref="uploader" :video_enabled="video_enabled" v-on:changed="onFilesChanged" v-on:info_changed="onFilesInfoChanged " />
                       
                       <!-- v-show="video_files.length > 0"     -->
                     <v-btn
@@ -631,15 +639,11 @@ export default {
 
   data: () => ({
 
-    ffmpeg : null,
-    tf_model : null,
-    
-    links: [
-        'Video BG Remover',
-        'Image BG Remover',
-      ],
+      ffmpeg : null,
+      tf_model : null,
+      
+      version_number: 0.12,
 
-      version_number: 0.1, 
 
       video_files : [],
 
@@ -662,6 +666,7 @@ export default {
 
       current_step: 1,
       load_state : 0,
+      video_enabled : true,
       process_mode : null,
 
       invalid_files_message : null,
@@ -708,27 +713,7 @@ export default {
 
     async setup() {
 
-        // Load FFMPEG and TF.js 
-
-        this.message = "Loading FFMPEG...";
-        this.loading_message = "Loading FFMPEG...";
-        this.ffmpeg = createFFmpeg({ log: true });
-
-        try {
-            await this.ffmpeg.load();
-
-        } catch(err) {
-            this.loading_message = "Error Loading FFMPEG";
-            this.message = "Error Loading FFMPEG...";
-            this.invalid_files_message = "There was an error loading a library. You may be on a slower internet connection. Try refreshing the page";
-            this.load_state = -1;
-            this.$gtag.event('error_ffmpeg_load');
-            return;
-        }
-
         
-
-        console.log("ffmpeg loaded ------------- ");
 
         this.message = "Loading model...";
         this.loading_message = "Loading Model...";
@@ -737,6 +722,7 @@ export default {
             this.tf_model = await tf.loadGraphModel('./model/model.json');
             
         } catch(err) {
+            console.log("tf err:  " + err );
             this.loading_message = "Error Loading tf.js model";
             this.message = "Error Loading tf.js model";
             this.invalid_files_message = "There was an error loading the model. You may be on a slower internet connection. Try refreshing the page";
@@ -746,6 +732,46 @@ export default {
         }
         
         console.log("tf model loaded ------------- ");
+
+
+
+        // Load FFMPEG and TF.js 
+
+        this.message = "Loading FFMPEG...";
+        this.loading_message = "Loading FFMPEG...";
+        this.ffmpeg = createFFmpeg({ log: true });
+
+        try {
+            
+            await this.ffmpeg.load();
+            //throw 'error';
+
+        } catch(err) {
+
+            console.log("ffmpeg err:  " + err );
+
+            // Chrome 1 - 79
+            //var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
+            //var isEdgeChromium = isChrome && (navigator.userAgent.indexOf("Edg") != -1);
+
+
+            this.loading_message = "Error Loading FFMPEG";
+            this.message = "Error Loading FFMPEG...";
+            //this.invalid_files_message = "There was an error loading a library. You may be on a slower internet connection. Try refreshing the page";
+            
+            
+            this.invalid_files_message = "Video support failed to load. Chrome browser is required for videos. If you are on a slow connection, try refreshing the page";
+
+            //this.load_state = -1;
+            this.video_enabled = false;
+            this.$gtag.event('error_ffmpeg_load');
+            
+            //return;
+        }
+
+        
+
+        // console.log("ffmpeg loaded ------------- ");
 
         this.message = "Ready!";
         this.loading_message = "Ready";
