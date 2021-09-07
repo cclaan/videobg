@@ -702,7 +702,7 @@ export default {
       ffmpeg : null,
       tf_model : null,
       
-      version_number: 0.25,
+      version_number: 0.26,
 
 
       selected_files : [],
@@ -777,6 +777,7 @@ export default {
         
         //var using_cpu = false;
         var has_32 = tf.ENV.getBool('WEBGL_RENDER_FLOAT32_CAPABLE');
+        var backend = 'webgl';
 
         this.message = "Loading model...";
         this.loading_message = "Loading Model...";
@@ -787,21 +788,10 @@ export default {
             //     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) &&
             //         !window.MSStream;
 
-            // if ( isIOS ) {
-
-            //     using_cpu = true;
-            //     this.num_warmup = 0;
-            //     console.log(tf.getBackend());
-            //     tf.setBackend('cpu');
-
-            // } else {
-
-            //     tf.setBackend('wasm');
-
-            // }
-
             if ( !has_32 ) {
-                tf.setBackend('wasm');
+                backend = 'cpu'; // 'wasm' not working on ios
+                this.num_warmup = 0;
+                tf.setBackend(backend);
                 await tf.ready();          
             }
 
@@ -866,7 +856,7 @@ export default {
         this.loading_message = "Ready";
 
         if ( !has_32 ) {
-            this.loading_message = "Ready - Using wasm backend";
+            this.loading_message = "Ready - Using " + backend + " backend";
         }
 
         this.load_state = 1;
