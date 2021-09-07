@@ -11,6 +11,7 @@
     "@ffmpeg/core": "^0.10.0",
     "@ffmpeg/ffmpeg": "^0.10.1",
     "@tensorflow/tfjs": "^3.7.0",
+    "@tensorflow/tfjs-backend-wasm": "^3.9.0",
     "core-js": "^3.6.5",
     "file-saver": "^2.0.5",
     "jszip": "^3.7.1",

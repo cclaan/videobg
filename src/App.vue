@@ -674,6 +674,8 @@ import Uploader from './components/uploader.vue';
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-wasm';
+
 //import { loadGraphModel } from '@tensorflow/tfjs-converter';
 
 //var JSZip = require("jszip");
@@ -773,24 +775,38 @@ export default {
     async setup() {
 
         
-        var using_cpu = false;
+        //var using_cpu = false;
+        var has_32 = tf.ENV.getBool('WEBGL_RENDER_FLOAT32_CAPABLE');
 
         this.message = "Loading model...";
         this.loading_message = "Loading Model...";
 
         try {
 
-            let isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) &&
-                    !window.MSStream;
+            // let isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) ||
+            //     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) &&
+            //         !window.MSStream;
 
-            if ( isIOS ) {
-                using_cpu = true;
-                this.num_warmup = 0;
-                console.log(tf.getBackend());
-                tf.setBackend('cpu');
+            // if ( isIOS ) {
 
-            } 
+            //     using_cpu = true;
+            //     this.num_warmup = 0;
+            //     console.log(tf.getBackend());
+            //     tf.setBackend('cpu');
+
+            // } else {
+
+            //     tf.setBackend('wasm');
+
+            // }
+
+            if ( !has_32 ) {
+                tf.setBackend('wasm');
+                await tf.ready();          
+            }
+
+            console.log("tf backend ---------- ");
+            console.log(tf.getBackend());
 
             this.tf_model = await tf.loadGraphModel('./model/model.json');
             
@@ -849,8 +865,8 @@ export default {
         this.message = "Ready";
         this.loading_message = "Ready";
 
-        if ( using_cpu ) {
-            this.loading_message = "Ready - Using CPU Backend";
+        if ( !has_32 ) {
+            this.loading_message = "Ready - Using wasm backend";
         }
 
         this.load_state = 1;
