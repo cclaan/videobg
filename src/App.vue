@@ -315,8 +315,8 @@
 
                 <!-- =========== STEP 1 ========== -->
 
-                  <v-text v-if="video_enabled">Select Video or Images</v-text>
-                  <v-text v-if="!video_enabled">Select Images</v-text>
+                  <span v-if="video_enabled">Select Video or Images</span>
+                  <span v-if="!video_enabled">Select Images</span>
                   
                 </v-stepper-step>
 
