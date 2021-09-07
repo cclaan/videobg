@@ -323,7 +323,7 @@
                 <v-stepper-content step="1">
                   
 <!--                     <div
-                      v-for="file in video_files"
+                      v-for="file in selected_files"
                       :key="file.name"
                     >
                       {{ file.name }} size: {{ Math.round(file.size / 10000) / 100 }}  MB
@@ -332,10 +332,10 @@
 
                     <Uploader ref="uploader" :video_enabled="video_enabled" v-on:changed="onFilesChanged" v-on:info_changed="onFilesInfoChanged " />
                       
-                      <!-- v-show="video_files.length > 0"     -->
+                      <!-- v-show="selected_files.length > 0"     -->
                     <v-btn
                       
-                      :disabled="video_files.length == 0 || invalid_files_message != null || load_state < 0"
+                      :disabled="selected_files.length == 0 || invalid_files_message != null || load_state < 0"
                       color="primary"
                       class="mb-6"
                       @click="nextStep"
@@ -362,7 +362,7 @@
                     elevation="0"
                   >
 
-                  <div v-if="process_mode=='images' && video_files.length > 1">
+                  <div v-if="process_mode=='images' && selected_files.length > 1">
                     <v-switch
                       v-model="treat_images_as_sequence"
                       label="Treat images as sequence"
@@ -375,7 +375,7 @@
                   Downsample Ratio: <strong>{{ downsample_ratio.toFixed(1) }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
                   <v-slider
                         min="0.1"
-                        max="0.8"
+                        max="1.0"
                         step="0.025"
                       v-model="downsample_ratio"
                       
@@ -430,7 +430,7 @@
                   color="primary"
                   class="mb-4"
                   @click="processFiles"
-                  :disabled="video_files.length == 0 || load_state >= 2 || load_state == 0"
+                  :disabled="selected_files.length == 0 || load_state >= 2 || load_state == 0"
                   :loading="load_state >= 2 || load_state == 0"
                 >
                   Process
@@ -510,6 +510,9 @@
                     </div>
 
                     <video id="output-video" style="display: none; max-width: 70%;" class="ma-4" controls></video>
+                    
+                    <img id="output-image" style="display: none; max-width: 70%; border: 1px solid #ccc;" class="ma-4"/>
+
                     <a href="#" style="display: none;" id="videolink" download="video.mp4">DOWNLOAD</a>
 
                   </v-card>
@@ -517,11 +520,11 @@
                   <v-btn
                     color="primary"
                     class="ma-4"
-                    v-if="process_mode=='video'"
+                    v-if="process_mode=='video' || (process_mode == 'images' && selected_files.length == 1)"
                     :disabled="load_state < 5"
                     @click="downloadVideo"
                   >
-                    Download MP4
+                    Download
                   </v-btn>
 
 <!--                   <v-btn
@@ -657,7 +660,7 @@ export default {
       version_number: 0.12,
 
 
-      video_files : [],
+      selected_files : [],
 
       toggle_exclusive: undefined,
 
@@ -667,7 +670,7 @@ export default {
 
       progress_value: "",
 
-      num_warmup: 2,
+      num_warmup: 4,
       treat_images_as_sequence : false,
       downsample_ratio : 0.5,
 
@@ -815,7 +818,7 @@ export default {
 
         // this.current_step = 1;
         // this.load_state = 1;
-        // this.video_files = [];
+        // this.selected_files = [];
         // this.$refs.uploader.files = [];
         // this.$refs.uploader.dropped = 0;
         // this.$refs.uploader.Imgs = [];
@@ -826,10 +829,20 @@ export default {
 
     async processFiles() {
 
+        this.load_state = 2;
+        this.current_step = 3;
+        this.processing_overlay = true;
+
+        // setTimeout to give UI chance to update 
+
         if ( this.process_mode == 'video' ) {
-            await this.processVideo();
+            
+            setTimeout(() => { this.processVideo() }, 500 );
+
         } else if ( this.process_mode == 'images' ) {
-            await this.processImages();
+            
+            setTimeout(() => { this.processImages() }, 500 );
+
         }
         
     },
@@ -947,29 +960,20 @@ export default {
         this.$gtag.event('process_images');
 
         this.load_state = 2;
-
         this.current_step = 3;
-
         this.processing_overlay = true;
 
         this.bg_color = [ this.color_picker_rgba['r'] / 255.0,  this.color_picker_rgba['g'] / 255.0, this.color_picker_rgba['b'] / 255.0 ];
 
-        console.log( " process images: " + this.video_files );
+        console.log( " process images: " + this.selected_files );
 
         var zip = new JSZip();
 
-        //const model = this.tf_model;
-
-        var image_files = this.video_files;
+        var image_files = this.selected_files;
         const single_image = image_files.length == 1;
 
-        // const num_warmup = this.num_warmup;
-        // for ( var w = 0; w < num_warmup; w++) {
-        //     image_files.splice(0, 0, image_files[0]);
-        // }
-
         // Set initial recurrent state
-        let [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+        //let r1i, r2i, r3i, r4i = null;
 
         // Set downsample ratio
         const downsample_ratio = tf.tensor(this.downsample_ratio);
@@ -981,8 +985,6 @@ export default {
 
         const max_image_dim = Math.round(this.max_image_dim);
 
-        //var prev_width = -1;
-        //var prev_height = -1;
 
         for ( const idx in image_files ) {
 
@@ -1002,30 +1004,19 @@ export default {
             frame_img.src = dataURL;
             await frame_img.decode();
 
-            //const img_w = frame_img.width;
-            //const img_h = frame_img.height;
 
-            // if ( (idx > 0) && (img_w != prev_width || img_h != prev_height ) ) {
-            //     console.log(" REELOADgin TF model!!");
-            //     //this.tf_model = await tf.loadGraphModel('./model/model.json');
+            // reset recurrent state for each image
+            // if ( !this.treat_images_as_sequence || r1i == null) {
             //     [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
             // }
-            
-            // reset recurrent state for each image
-            if ( !this.treat_images_as_sequence ) {
-                [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
-            }
-
-            //prev_width = img_w;
-            //prev_height = img_h;
 
             var img = tf.browser.fromPixels( frame_img );
-
-            console.log("tf image: " + img.shape );
             var [height, width] = img.shape.slice(0, 2);
 
-            
+            console.log("tf image: " + width + " h: " + height );
 
+            
+            // Resize image if larger than max dim
             if ( Math.max(width, height) > max_image_dim ) {
                 
                 if ( width > height ) {
@@ -1044,56 +1035,100 @@ export default {
                 const img2 = tf.image.resizeBilinear(img, [height, width]);
                 tf.dispose(img);
                 img = img2;
+
             }
 
 
             const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
 
-            var fgr, pha, r1o, r2o, r3o, r4o = null;
+            
 
             var matte = null;
+            var total_weight = 0.0;
 
-            for ( var wi = 0; wi < (this.num_warmup+1); wi ++ ) {
+            const num_iters = (this.num_warmup + 1);
+            // w = 2 ,  ni = 3 
 
-                [fgr, pha, r1o, r2o, r3o, r4o] = await this.tf_model.executeAsync(
+            let [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+
+            for ( var wi = 0; wi < num_iters; wi ++ ) {
+
+                
+                //const downsample_ratio = tf.tensor(this.downsample_ratio + 0.25 * wi / num_iters);
+                console.log( "   - DS: " + downsample_ratio );
+
+                let [fgr, pha, r1o, r2o, r3o, r4o] = await this.tf_model.executeAsync(
                     {src, r1i, r2i, r3i, r4i, downsample_ratio}, // provide inputs
                     ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']   // select outputs
                 );
 
+                const [mh, mw] = pha.shape.slice(1,3);
+                console.log( " --> Matte shape:  " + mw + " h: " + mh );
+
+                var weight = (wi / (1.0 * num_iters));
+                if ( wi == num_iters-1 ) { weight = 1.0; } // 1.0 for final iteration 
+
+                console.log(" --- weight: "  + weight );
+
+                
+                const pha2 = pha.mul(weight);
+                tf.dispose(pha);
+                pha = pha2;
+
+                total_weight += weight;
+
                 if ( matte == null ) {
                     matte = pha.clone();
                 } else {
-                    matte = tf.tidy( () => matte.mul(pha) );
+                    const m2 = matte.add(pha);
+                    tf.dispose(matte);
+                    matte = m2;
                 }
 
-                // 0 1 2 
+                // if ( wi == num_iters - 1 ) {
+                //     matte = pha.clone();
+                // }
+
+                // 
+                // 0 1 2 3
                 //if ( wi < this.num_warmup ) {
-                    tf.dispose([fgr, pha]);
+                //tf.dispose([fgr, pha]);
                 //}
-                
-                // dispose recurrent tensors
-                tf.dispose([r1i, r2i, r3i, r4i]);
-                
+                //console.log(downsample_ratio);
+                    
+                tf.dispose([fgr, pha, r1i, r2i, r3i, r4i]);
+
                 // Update recurrent states.
                 [r1i, r2i, r3i, r4i] = [r1o, r2o, r3o, r4o];
 
-
+                // dispose recurrent tensors
+                // const reset_rnn = true;
+                // if ( reset_rnn ) {
+                //     tf.dispose([r1i, r2i, r3i, r4i]);
+                //     [r1i, r2i, r3i, r4i] = [tf.tensor(0.), tf.tensor(0.), tf.tensor(0.), tf.tensor(0.)];
+                // }
+                
+                
+                
                 console.log("TF mem: ");
                 const mem = tf.memory();
                 console.log("Num tensors: " + mem['numTensors'] + "  Gpu Bytes: " + mem['numBytesInGPU'] / 100000.0 ) ;
 
             }
 
+            tf.dispose([r1i, r2i, r3i, r4i]);
+
+            const matte2 = matte.div(total_weight);
+            tf.dispose(matte);
+            matte = matte2;
 
             const img_name = img_file.name;
             const download_file = (single_image) && (idx == image_files.length - 1);
-
             await this.drawAndZip(img, matte, canvas, img_name, zip, download_file);
-            //await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, download_file);
             
             // Dispose old tensors.
-            //tf.dispose([img, src, fgr, pha, matte]);
-            tf.dispose([img, src, matte]);
+            //tf.dispose([img, src, matte]);
+            tf.dispose([img, src]);
 
             // set to 'processing' state after first frame, since that takes a while
             if ( idx == 0 ) {
@@ -1102,8 +1137,9 @@ export default {
                 this.processing_overlay = false;
             }
 
-        } // end for image_files 
 
+        } // end for image files
+        
 
         this.progress_value = "Creating Zip...";
         this.message = 'Creating Zip...';
@@ -1134,8 +1170,6 @@ export default {
 
         }
 
-        
-
     },
 
     async processVideo() {
@@ -1147,16 +1181,7 @@ export default {
         //  - https://superuser.com/questions/1009969/how-to-extract-a-frame-out-of-a-video-using-ffmpeg
 
         this.load_state = 2;
-
-        // setTimeout( function() { 
-        //     this.blah();
-        // }, 600 );
-
-        //setTimeout(() => { this.current_step = 3; }, 800 );
-
-
         this.current_step = 3;
-
         this.processing_overlay = true;
 
         this.bg_color = [ this.color_picker_rgba['r'] / 255.0,  this.color_picker_rgba['g'] / 255.0, this.color_picker_rgba['b'] / 255.0 ];
@@ -1168,7 +1193,7 @@ export default {
 
         const max_image_dim = Math.round(max_image_dim);
 
-        const files = this.video_files;
+        const files = this.selected_files;
 
         var video_name = files[0].name;
 
@@ -1472,22 +1497,33 @@ export default {
             img_name = img_name.replace(".bmp", ".png");
         }
 
+        // Update html image:
+        const img_elem = document.getElementById('output-image');
+        //video.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+        //img_elem.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/'+ext }));
+        img_elem.src = imgAsDataURL;
+        img_elem.style.display = "block";
+
+        const video_download = document.getElementById('videolink');
+        video_download.href = img_elem.src;
+        video_download.download = img_name;
+
+
         // TODO: call canvas.blob directly ? 
+        // - not supported everywhere? 
+        // - https://github.com/blueimp/JavaScript-Canvas-to-Blob 
+        // - https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
+        // screen.toBlob(function (blob) {
+        //     zip.file("hello.png", blob);
+        // });
+
         
-        console.log( " ====> Zipping image: " + img_name);
         zip.file(img_name, img_blob);
     
         if ( download_file ) {
             //saveAs(img_blob, "freebackgrounderaser.com_" + img_name );
             saveAs(imgAsDataURL, img_name );
         }
-
-        // screen.toBlob(function (blob) {
-        //     zip.file("hello.png", blob);
-        // });
-
-        //await ffmpeg.FS('writeFile', img_path_out, img_blob);
-        //console.log("Wrote file: " + img_path_out );
 
         rgba.dispose();
 
@@ -1581,7 +1617,7 @@ export default {
 
     onFilesChanged(files) {
         //console.log("files changed! " + files );
-        this.video_files = files;
+        this.selected_files = files;
         
     },
     onFilesInfoChanged() {
@@ -1598,3 +1634,49 @@ export default {
 
 };
 </script>
+
+<style scoped>
+
+/**/
+/*background-image: require("checker.png");*/
+#output-image {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgAQMAAABJtOi3AAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAZQTFRF09TW////TjnOgAAAABRJREFUeJxjYGD4/5+BigR1TWMAAO29P8Hcj+G3AAAAAElFTkSuQmCC);  
+    background-repeat: repeat;
+}
+
+/*#output-image2 {
+  background-color: #269;
+  background-image:
+    linear-gradient(rgba(255,255,255,.5) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255,255,255,.5) 2px, transparent 2px),
+    linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+}
+
+#output-image {
+  --checkerSize: 10px;
+  --checkerColor: gainsboro;
+  --checkerAltColor: white;
+
+  background-image:
+    linear-gradient(45deg, var(--checkerColor, magenta) 25%, transparent 25%), 
+    linear-gradient(135deg, var(--checkerColor, orange) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checkerColor, dodgerblue) 75%),
+    linear-gradient(135deg, transparent 75%, var(--checkerColor, darkorchid) 75%);
+  background-color: var(--checkerAltColor);
+  
+  background-size: 
+    calc(2 * var(--checkerSize)) 
+    calc(2 * var(--checkerSize));
+  
+  background-position: 
+    0 0, 
+    var(--checkerSize) 0, 
+    var(--checkerSize) calc(-1 * var(--checkerSize)), 
+    0px var(--checkerSize);
+}
+*/
+
+</style>
