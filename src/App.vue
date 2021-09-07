@@ -702,7 +702,7 @@ export default {
       ffmpeg : null,
       tf_model : null,
       
-      version_number: 0.24,
+      version_number: 0.25,
 
 
       selected_files : [],
