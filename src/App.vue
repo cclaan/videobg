@@ -640,7 +640,7 @@
 
       
 
-      <Footer class="my-4" :version_number="version_number"/>
+      <Footer class="my-4 px-4" :version_number="version_number"/>
 
 
 
@@ -779,7 +779,7 @@ export default {
 
         try {
 
-            //tf.setBackend('wasm');
+            tf.setBackend('cpu');
             this.tf_model = await tf.loadGraphModel('./model/model.json');
             
         } catch(err) {
@@ -821,7 +821,7 @@ export default {
             //this.invalid_files_message = "There was an error loading a library. You may be on a slower internet connection. Try refreshing the page";
             
             
-            this.invalid_files_message = "Video support failed to load. Desktop Chrome browser is required for videos. If you are using Desktop Chrome, but on a slow connection, try refreshing the page";
+            this.invalid_files_message = "Video support failed to load. Desktop Chrome browser is required for videos. If you are on Chrome, try refreshing the page.";
 
             //this.load_state = -1;
             this.video_enabled = false;
