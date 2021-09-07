@@ -394,7 +394,7 @@
 
                   Downsample Ratio: <strong>{{ downsample_ratio.toFixed(2) }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
 
-                  <p class="ma-0" style="max-width: 65%; color: #999; font-size: 90%;">This parameter reduces the image size before processing. Different values can affect the quality of the background removal. </p>
+                  <p class="ma-0" style="max-width: 450px; color: #999; font-size: 90%;">This parameter reduces the image size before processing. Different values can affect the quality of the background removal. </p>
 
                   <v-slider
                         min="0.1"
@@ -421,7 +421,7 @@
 
                     <div v-if="process_mode=='images'">
                         Num Warmup Iterations: <strong>{{ num_warmup }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
-                        <p class="ma-0" style="max-width: 65%; color: #999; font-size: 90%;">This parameter runs the process several times to 'warm-up' the network. Each extra iteration takes time</p>
+                        <p class="ma-0" style="max-width: 450px; color: #999; font-size: 90%;">This parameter runs the process several times to 'warm-up' the network. Each extra iteration takes time</p>
 
                         <v-slider
                             min="0"
@@ -700,7 +700,7 @@ export default {
       ffmpeg : null,
       tf_model : null,
       
-      version_number: 0.2,
+      version_number: 0.21,
 
 
       selected_files : [],
@@ -715,7 +715,7 @@ export default {
 
       num_warmup: 3,
       treat_images_as_sequence : false,
-      downsample_ratio : 0.6,
+      downsample_ratio : 0.5,
 
       max_image_dim : 1400,
 
@@ -1512,11 +1512,11 @@ export default {
     },
 
     async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, download_file) {
-
+        // x.clipByValue(-2, 3)
         const rgba = tf.tidy(() => {
           //const rgb = fgr.squeeze(0).mul(255).cast('int32');
-          const rgb = fgr.cast('int32');
-          const a = alpha_matte.squeeze(0).mul(255).cast('int32');
+          const rgb = fgr.clipByValue(0.0, 255.0).cast('int32');
+          const a = alpha_matte.squeeze(0).clipByValue(0.0, 0.999).mul(255.0).cast('int32').clipByValue(0,255);
           return tf.concat([rgb, a], -1);
         });
 
