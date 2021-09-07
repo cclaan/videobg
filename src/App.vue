@@ -1081,7 +1081,7 @@ export default {
                 my_this.message = 'Complete - Image(s) Downloaded';
                 my_this.progress_value = "Complete";
                 my_this.load_state = 5; // Done
-                this.$gtag.event('process_images_done');
+                my_this.$gtag.event('process_images_done');
 
             });
 
