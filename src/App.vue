@@ -399,7 +399,7 @@
                   <v-slider
                         min="0.1"
                         max="1.0"
-                        step="0.025"
+                        step="0.05"
                       v-model="downsample_ratio"
                       
                       thumb-color="red"
@@ -419,18 +419,20 @@
                     </v-alert>
 
 
-                    Num Warmup Iterations: <strong>{{ num_warmup }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
-                    <p class="ma-0" style="max-width: 65%; color: #999; font-size: 90%;">This parameter runs the process several times to 'warm-up' the network. Each extra iteration takes time</p>
-                    
-                    <v-slider
-                        min="0"
-                        max="6"
-                        step="1"
-                      v-model="num_warmup"
-                      
-                      thumb-color="red"
-                      
-                    ></v-slider>
+                    <div v-if="process_mode=='images'">
+                        Num Warmup Iterations: <strong>{{ num_warmup }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
+                        <p class="ma-0" style="max-width: 65%; color: #999; font-size: 90%;">This parameter runs the process several times to 'warm-up' the network. Each extra iteration takes time</p>
+
+                        <v-slider
+                            min="0"
+                            max="6"
+                            step="1"
+                          v-model="num_warmup"
+                          
+                          thumb-color="red"
+                          
+                        ></v-slider>
+                    </div>
                     
 
 
@@ -698,7 +700,7 @@ export default {
       ffmpeg : null,
       tf_model : null,
       
-      version_number: 0.12,
+      version_number: 0.2,
 
 
       selected_files : [],
@@ -711,12 +713,11 @@ export default {
 
       progress_value: "",
 
-      num_warmup: 4,
+      num_warmup: 3,
       treat_images_as_sequence : false,
-      downsample_ratio : 0.5,
+      downsample_ratio : 0.6,
 
       max_image_dim : 1400,
-
 
       snackbar: false,
       snack_text: 'My timeout is set to 2000.',
@@ -1352,7 +1353,9 @@ export default {
                     }
 
                     console.log(" tf resizing image to : " + width + " x " + height );
-                    img = tf.image.resizeBilinear(img, [height, width]);
+                    const img2 = tf.image.resizeBilinear(img, [height, width]);
+                    tf.dispose(img);
+                    img = img2;
                 }
 
                 //const img = await webcam.capture();
@@ -1369,7 +1372,9 @@ export default {
                 // r4i = r4o; // not sure, @cc added this , the recurrent values should update right? 
 
                 //this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg);
-                this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg, this.bg_color);
+
+                await this.drawMatte(fgr.clone(), pha.clone(), canvas, img_path, ffmpeg, this.bg_color);
+
                 //this.drawMatte(null, pha.clone(), canvas, img_path, ffmpeg);
                 canvas.style.background = 'rgb(0, 0, 0)';
 
@@ -1389,6 +1394,10 @@ export default {
                     this.processing_overlay = false;
                 }
 
+                console.log("TF mem: ");
+                const mem = tf.memory();
+                console.log("Num tensors: " + mem['numTensors'] + "  Gpu Bytes: " + mem['numBytesInGPU'] / 100000.0 ) ;
+
 
           }
 
@@ -1401,7 +1410,7 @@ export default {
         
         const ext = "mp4";
         const codec = ext == "mp4" ? 'libx264' : 'libvpx';
-        const video_out_name = "video." + ext;
+        const video_out_name = "FreeBackgroundEraser-video." + ext;
         
         // By default the CRF value can be from 4–63, and 10 is a good starting point. Lower values mean better quality.
         // ffmpeg -i input.mp4 -c:v libvpx -crf 10 -b:v 1M -c:a libvorbis output.webm
@@ -1590,7 +1599,7 @@ export default {
         //   return tf.concat([rgb, a], -1);
 
         // });
-        console.log(bg_color);
+        //console.log(bg_color);
 
         // real alpha channel == matte 
         // const rgba = tf.tidy(() => {
