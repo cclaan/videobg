@@ -700,7 +700,7 @@ export default {
       ffmpeg : null,
       tf_model : null,
       
-      version_number: 0.22,
+      version_number: 0.23,
 
 
       selected_files : [],
@@ -773,13 +773,23 @@ export default {
     async setup() {
 
         
+        var using_cpu = false;
 
         this.message = "Loading model...";
         this.loading_message = "Loading Model...";
 
         try {
 
-            tf.setBackend('cpu');
+            let isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) &&
+                    !window.MSStream;
+
+            if ( isIOS ) {
+                using_cpu = true;
+                this.num_warmup = 0;
+                tf.setBackend('cpu');
+            } 
+
             this.tf_model = await tf.loadGraphModel('./model/model.json');
             
         } catch(err) {
@@ -834,8 +844,12 @@ export default {
 
         // console.log("ffmpeg loaded ------------- ");
 
-        this.message = "Ready!";
+        this.message = "Ready";
         this.loading_message = "Ready";
+
+        if ( using_cpu ) {
+            this.loading_message = "Ready - Using CPU Backend";
+        }
 
         this.load_state = 1;
 
