@@ -394,6 +394,18 @@
                       
                     ></v-slider>
 
+                    Max Image Size: <strong>{{ max_image_dim }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
+                    <v-slider
+                        min="500"
+                        max="1800"
+                        step="100"
+                      v-model="max_image_dim"
+                      
+                      thumb-color="red"
+                      
+                    ></v-slider>
+
+
                     <!-- <h4 v-if="process_mode=='images'">No Settings for images</h4> -->
 
                    <h4 v-if="process_mode=='video'">Select Background Color</h4>
@@ -655,9 +667,11 @@ export default {
 
       progress_value: "",
 
-      num_warmup: 3,
+      num_warmup: 2,
       treat_images_as_sequence : false,
       downsample_ratio : 0.5,
+
+      max_image_dim : 1400,
 
 
       snackbar: false,
@@ -719,6 +733,8 @@ export default {
         this.loading_message = "Loading Model...";
 
         try {
+
+            //tf.setBackend('wasm');
             this.tf_model = await tf.loadGraphModel('./model/model.json');
             
         } catch(err) {
@@ -963,6 +979,8 @@ export default {
 
         this.message = 'Reading Images...';
 
+        const max_image_dim = Math.round(this.max_image_dim);
+
         //var prev_width = -1;
         //var prev_height = -1;
 
@@ -1006,30 +1024,34 @@ export default {
             console.log("tf image: " + img.shape );
             var [height, width] = img.shape.slice(0, 2);
 
-            const MAX_IMAGE_DIM = 1600;
+            
 
-            if ( Math.max(width, height) > MAX_IMAGE_DIM ) {
+            if ( Math.max(width, height) > max_image_dim ) {
                 
                 if ( width > height ) {
 
-                    height = height * (MAX_IMAGE_DIM / width);
+                    height = height * (max_image_dim / width);
                     height = Math.round(height);
-                    width = MAX_IMAGE_DIM;
+                    width = max_image_dim;
 
                 } else {
-                    width = width * (MAX_IMAGE_DIM / height);
+                    width = width * (max_image_dim / height);
                     width = Math.round(width);
-                    height = MAX_IMAGE_DIM;
+                    height = max_image_dim;
                 }
 
                 console.log(" tf resizing image to : " + width + " x " + height );
-                img = tf.image.resizeBilinear(img, [height, width]);
+                const img2 = tf.image.resizeBilinear(img, [height, width]);
+                tf.dispose(img);
+                img = img2;
             }
 
 
             const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
 
             var fgr, pha, r1o, r2o, r3o, r4o = null;
+
+            var matte = null;
 
             for ( var wi = 0; wi < (this.num_warmup+1); wi ++ ) {
 
@@ -1038,11 +1060,27 @@ export default {
                     ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']   // select outputs
                 );
 
+                if ( matte == null ) {
+                    matte = pha.clone();
+                } else {
+                    matte = tf.tidy( () => matte.mul(pha) );
+                }
+
+                // 0 1 2 
+                //if ( wi < this.num_warmup ) {
+                    tf.dispose([fgr, pha]);
+                //}
+                
                 // dispose recurrent tensors
                 tf.dispose([r1i, r2i, r3i, r4i]);
                 
                 // Update recurrent states.
                 [r1i, r2i, r3i, r4i] = [r1o, r2o, r3o, r4o];
+
+
+                console.log("TF mem: ");
+                const mem = tf.memory();
+                console.log("Num tensors: " + mem['numTensors'] + "  Gpu Bytes: " + mem['numBytesInGPU'] / 100000.0 ) ;
 
             }
 
@@ -1050,10 +1088,12 @@ export default {
             const img_name = img_file.name;
             const download_file = (single_image) && (idx == image_files.length - 1);
 
-            await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, download_file);
+            await this.drawAndZip(img, matte, canvas, img_name, zip, download_file);
+            //await this.drawAndZip(fgr.clone(), pha.clone(), canvas, img_name, zip, download_file);
             
             // Dispose old tensors.
-            tf.dispose([img, src, fgr, pha]);
+            //tf.dispose([img, src, fgr, pha, matte]);
+            tf.dispose([img, src, matte]);
 
             // set to 'processing' state after first frame, since that takes a while
             if ( idx == 0 ) {
@@ -1125,6 +1165,8 @@ export default {
 
         const ffmpeg = this.ffmpeg;
         const model = this.tf_model;
+
+        const max_image_dim = Math.round(max_image_dim);
 
         const files = this.video_files;
 
@@ -1224,20 +1266,19 @@ export default {
                 console.log("tf image: " + img.shape );
                 var [height, width] = img.shape.slice(0, 2);
 
-                const MAX_IMAGE_DIM = 1600;
 
-                if ( Math.max(width, height) > MAX_IMAGE_DIM ) {
+                if ( Math.max(width, height) > max_image_dim ) {
                     
                     if ( width > height ) {
 
-                        height = height * (MAX_IMAGE_DIM / width);
+                        height = height * (max_image_dim / width);
                         height = Math.round(height);
-                        width = MAX_IMAGE_DIM;
+                        width = max_image_dim;
 
                     } else {
-                        width = width * (MAX_IMAGE_DIM / height);
+                        width = width * (max_image_dim / height);
                         width = Math.round(width);
-                        height = MAX_IMAGE_DIM;
+                        height = max_image_dim;
                     }
 
                     console.log(" tf resizing image to : " + width + " x " + height );
@@ -1394,7 +1435,8 @@ export default {
     async drawAndZip(fgr, alpha_matte, canvas, img_name, zip, download_file) {
 
         const rgba = tf.tidy(() => {
-          const rgb = fgr.squeeze(0).mul(255).cast('int32');
+          //const rgb = fgr.squeeze(0).mul(255).cast('int32');
+          const rgb = fgr.cast('int32');
           const a = alpha_matte.squeeze(0).mul(255).cast('int32');
           return tf.concat([rgb, a], -1);
         });
