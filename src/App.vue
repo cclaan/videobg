@@ -787,7 +787,9 @@ export default {
             if ( isIOS ) {
                 using_cpu = true;
                 this.num_warmup = 0;
-                tf.setBackend('cpu');
+                console.log(tf.getBackend());
+                //tf.setBackend('cpu');
+                tf.setBackend('webgl');
             } 
 
             this.tf_model = await tf.loadGraphModel('./model/model.json');
