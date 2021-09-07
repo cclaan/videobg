@@ -372,7 +372,30 @@
 
                   </div>
 
-                  Downsample Ratio: <strong>{{ downsample_ratio.toFixed(1) }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
+                  
+
+                    <!-- <v-snackbar
+                      v-model="warn_ds"
+                    >
+                      
+                      High values will require more GPU memory - desktop only!
+
+                      <template v-slot:action="{ attrs }">
+                        <v-btn
+                          color="pink"
+                          text
+                          v-bind="attrs"
+                          @click="warn_ds = false"
+                        >
+                          Close
+                        </v-btn>
+                      </template>
+                    </v-snackbar> -->
+
+                  Downsample Ratio: <strong>{{ downsample_ratio.toFixed(2) }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
+
+                  <p class="ma-0" style="max-width: 65%; color: #999; font-size: 90%;">This parameter reduces the image size before processing. Different values can affect the quality of the background removal. </p>
+
                   <v-slider
                         min="0.1"
                         max="1.0"
@@ -383,7 +406,22 @@
                       
                     ></v-slider>
 
+                    <v-alert
+              
+                      v-show="downsample_ratio > 0.7"
+                      color="pink"
+                      dark
+                      
+                      type="error"
+                      
+                    >
+                      High values will require more GPU memory and take longer. This tab may become unreponsive.
+                    </v-alert>
+
+
                     Num Warmup Iterations: <strong>{{ num_warmup }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
+                    <p class="ma-0" style="max-width: 65%; color: #999; font-size: 90%;">This parameter runs the process several times to 'warm-up' the network. Each extra iteration takes time</p>
+                    
                     <v-slider
                         min="0"
                         max="6"
@@ -393,7 +431,10 @@
                       thumb-color="red"
                       
                     ></v-slider>
+                    
 
+
+<!-- 
                     Max Image Size: <strong>{{ max_image_dim }}</strong> <span style="color: gray;"> &nbsp;&nbsp; ( lower is faster )</span>
                     <v-slider
                         min="500"
@@ -403,7 +444,7 @@
                       
                       thumb-color="red"
                       
-                    ></v-slider>
+                    ></v-slider> -->
 
 
                     <!-- <h4 v-if="process_mode=='images'">No Settings for images</h4> -->
@@ -472,12 +513,12 @@
                     min-height="210"
                   >
 
-                  <v-overlay :value="processing_overlay" absolute opacity="0.2">
+                  <!-- <v-overlay :value="processing_overlay" absolute opacity="0.2">
                     <v-progress-circular
                       indeterminate
                       size="64"
                     ></v-progress-circular>
-                  </v-overlay>
+                  </v-overlay> -->
 
 <!--                   <v-progress-circular
                       indeterminate
@@ -1066,11 +1107,15 @@ export default {
                 console.log( " --> Matte shape:  " + mw + " h: " + mh );
 
                 var weight = (wi / (1.0 * num_iters));
-                if ( wi == num_iters-1 ) { weight = 1.0; } // 1.0 for final iteration 
+
+                if ( wi == num_iters-1 ) { 
+                    weight = 1.0; // 1.0 for final iteration 
+                } else {
+                    weight = 0.05;
+                }
 
                 console.log(" --- weight: "  + weight );
 
-                
                 const pha2 = pha.mul(weight);
                 tf.dispose(pha);
                 pha = pha2;
