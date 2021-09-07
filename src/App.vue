@@ -700,7 +700,7 @@ export default {
       ffmpeg : null,
       tf_model : null,
       
-      version_number: 0.23,
+      version_number: 0.24,
 
 
       selected_files : [],
@@ -788,8 +788,8 @@ export default {
                 using_cpu = true;
                 this.num_warmup = 0;
                 console.log(tf.getBackend());
-                //tf.setBackend('cpu');
-                tf.setBackend('webgl');
+                tf.setBackend('cpu');
+
             } 
 
             this.tf_model = await tf.loadGraphModel('./model/model.json');
