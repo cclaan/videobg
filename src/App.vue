@@ -20,7 +20,7 @@
           <!-- <v-img src="logo.png"  class="shrink mr-2" contain/> -->
           <!-- <v-img src="logo.png"  height="48" class="shrink" contain/> -->
           <a href='https://www.FreeBackgroundEraser.com' style=" height: 42px;">
-            <img src="logo.png" height="42"  alt="FreeBackgroundEraser.com Logo - Remove backgrounds from images and video for free in the browser"/>
+            <img src="logo.png" height="42"  alt="Free online background remover for images and video. Download transparent pngs or green screen videos. Privacy friendly: No data leaves your computer"/>
           </a>
 
           <!-- <v-spacer></v-spacer> -->
