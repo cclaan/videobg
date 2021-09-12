@@ -674,7 +674,14 @@ import Uploader from './components/uploader.vue';
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-wasm';
+
+
+//import '@tensorflow/tfjs-backend-wasm';
+
+//import { setWasmPath } from '@tensorflow/tfjs-backend-wasm';
+// Default path without setWasmPath is /static/js/tfjs-backend-wasm.wasm
+//setWasmPath('/tfjs-backend-wasm.wasm');
+
 
 //import { loadGraphModel } from '@tensorflow/tfjs-converter';
 
@@ -774,8 +781,18 @@ export default {
 
     async setup() {
 
+        var has_shared = false;
         
-        //var using_cpu = false;
+        try {
+          let memory = new WebAssembly.Memory({initial:10, maximum:100, shared:true});
+          console.log("Memory: " + memory);
+          has_shared = true;
+        } catch(err) {
+          has_shared = false;
+          console.log(" Has shared err: " + err );
+        }
+
+        
         var has_32 = tf.ENV.getBool('WEBGL_RENDER_FLOAT32_CAPABLE');
         var backend = 'webgl';
 
@@ -790,8 +807,9 @@ export default {
 
             if ( !has_32 ) {
                 backend = 'cpu'; // 'wasm' not working on ios
+                //backend = 'wasm'; // 
                 this.num_warmup = 0;
-                tf.setBackend(backend);
+                await tf.setBackend(backend);
                 await tf.ready();          
             }
 
@@ -815,40 +833,36 @@ export default {
 
 
         // Load FFMPEG and TF.js 
+        if ( has_shared ) {
+          this.message = "Loading FFMPEG...";
+          this.loading_message = "Loading FFMPEG...";
 
-        this.message = "Loading FFMPEG...";
-        this.loading_message = "Loading FFMPEG...";
-        this.ffmpeg = createFFmpeg({ log: true });
+          this.ffmpeg = createFFmpeg({ log: true });
 
-        try {
-            
-            await this.ffmpeg.load();
-            //throw 'error';
+          try {
+              
+              await this.ffmpeg.load();
+              //throw 'error';
 
-        } catch(err) {
+          } catch(err) {
 
-            console.log("ffmpeg err:  " + err );
+              //console.log("ffmpeg err:  " + err );
 
-            // Chrome 1 - 79
-            //var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
-            //var isEdgeChromium = isChrome && (navigator.userAgent.indexOf("Edg") != -1);
+              this.loading_message = "Error Loading FFMPEG";
+              this.message = "Error Loading FFMPEG...";              
+              this.invalid_files_message = "Video support failed to load. Desktop Chrome browser is required for videos. If you are on Chrome, try refreshing the page.";
+              this.video_enabled = false;
+              this.$gtag.event('error_ffmpeg_load');
+              
+          }
 
+        } else {
 
-            this.loading_message = "Error Loading FFMPEG";
-            this.message = "Error Loading FFMPEG...";
-            //this.invalid_files_message = "There was an error loading a library. You may be on a slower internet connection. Try refreshing the page";
-            
-            
-            this.invalid_files_message = "Video support failed to load. Desktop Chrome browser is required for videos. If you are on Chrome, try refreshing the page.";
+              this.invalid_files_message = "Video support disabled. Chrome on desktop is required. If you are on Chrome, try refreshing the page.";
+              this.video_enabled = false;
+              this.$gtag.event('error_ffmpeg_load');
 
-            //this.load_state = -1;
-            this.video_enabled = false;
-            this.$gtag.event('error_ffmpeg_load');
-            
-            //return;
-        }
-
-        
+        }        
 
         // console.log("ffmpeg loaded ------------- ");
 
@@ -860,7 +874,6 @@ export default {
         }
 
         this.load_state = 1;
-
 
 
     },
