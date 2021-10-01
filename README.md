@@ -1,6 +1,6 @@
 # videobg
 
-Code for [FreeBackgroundEraser.com](freebackgrounderaser.com) - Easily remove the background from photos and videos. 
+Code for [FreeBackgroundEraser.com](https://www.freebackgrounderaser.com) - Easily remove the background from photos and videos. 
 Uses ffmpeg-wasm and RobustVideoMatting + tf.js 
 
 ## Project setup
